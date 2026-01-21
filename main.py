@@ -1,40 +1,51 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from openai import OpenAI
-from dotenv import load_dotenv
+import openai
 import os
 
-load_dotenv()
+from clients import clients
 
-app = FastAPI()  # <-- THIS MUST EXIST
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+app = FastAPI()
 
 class ChatRequest(BaseModel):
+    client_id: str
     message: str
 
-@app.get("/")
-def root():
-    return {"status": "API running"}
-
 @app.post("/chat")
-def chat(req: ChatRequest):
+async def chat(req: ChatRequest):
+    client = clients.get(req.client_id)
+
+    if not client:
+        raise HTTPException(status_code=404, detail="Invalid client ID")
+
+    messages = [
+        {
+            "role": "system",
+            "content": client["system_prompt"]
+        },
+        {
+            "role": "system",
+            "content": f"BUSINESS CONTEXT:\n{client['context']}"
+        },
+        {
+            "role": "user",
+            "content": req.message
+        }
+    ]
+
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a helpful website assistant."},
-                {"role": "user", "content": req.message}
-            ]
+        response = openai.ChatCompletion.create(
+            model="gpt-4.1-mini",
+            messages=messages,
+            temperature=0.3
         )
-        return {"reply": response.choices[0].message.content}
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {
+        "reply": response.choices[0].message.content
+    }
+
+
