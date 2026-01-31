@@ -31,7 +31,13 @@ Answer user questions based on this information.""",
     "client_b": """You are a helpful assistant for Client B.
 Their website is https://clientb.com
 They run a boutique interior design studio.
-Answer user questions about their services and contact info."""
+Answer user questions about their services and contact info.""",
+    
+    "client_c": """You are a helpful assistant for Voice Of Help.
+Their website is https://clientc.com
+They are a charitable trust partenered with Mental Health Foundation New Zealand(MHFNZ), dedicated to spreading awareness about mental health in New Zealand.
+Answer user questions based on this information.""",
+    
 }
 
 # Request model
@@ -69,6 +75,7 @@ def chat(req: ChatRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
