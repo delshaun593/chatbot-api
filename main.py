@@ -1,4 +1,4 @@
-@@ -1,51 +1,69 @@
+
 from fastapi import FastAPI, HTTPException
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -97,6 +97,7 @@ def chat(req: ChatRequest):
     return {
         "reply": response.choices[0].message.content
     }
+
 
 
 
