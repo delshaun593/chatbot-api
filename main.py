@@ -5,64 +5,61 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
+Load environment variables from .env
 load_dotenv()
 
-app = FastAPI()  # <-- THIS MUST EXIST
+Create FastAPI app
+app = FastAPI()
 
+Enable CORS for browser requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[""],
-    allow_methods=[""],
+    allow_origins=[""],          # allow all domains
+    allow_credentials=True,
+    allow_methods=[""],          # allow GET, POST, OPTIONS, etc.
     allow_headers=["*"],
 )
 
+OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-CLIENT_PROMPTS = {
-    "client_a": """You are a helpful assistant for Client A.
-Their website is https://clienta.com
-They sell gym equipment and fitness services.
-Answer user questions based on this information.""",
-
-    "client_b": """You are a helpful assistant for Client B.
-Their website is https://clientb.com
-They run a boutique interior design studio.
-Answer user questions about their services and contact info."""
-}
-
+Request schema (matches frontend)
 class ChatRequest(BaseModel):
     message: str
-    client_id: str
-    page_content: str = ""
+    client_id: str | None = None
+    page_content: str | None = None
 
+Health check
 @app.get("/")
 def root():
     return {"status": "API running"}
 
+Chat endpoint
 @app.post("/chat")
 def chat(req: ChatRequest):
-    # 1️⃣ Get client-specific system prompt
-    system_prompt = CLIENT_PROMPTS.get(req.client_id, "You are a helpful assistant.")
-
-    # 2️⃣ Combine system prompt with page content
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": f"Page content:\n{req.page_content}\nUser question:\n{req.message}"}
-    ]
-
     try:
-        # 3️⃣ Send request to OpenAI Chat API
         response = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=messages
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful business assistant."
+                },
+                {
+                    "role": "user",
+                    "content": req.message
+                }
+            ]
         )
 
-        # 4️⃣ Return the AI's reply
-        return {"reply": response.choices[0].message.content}
+        return {
+            "reply": response.choices[0].message.content
+        }
 
     except Exception as e:
-        # 5️⃣ Catch errors (e.g., quota, network, API key)
-        return {"error": str(e)}
+        print("ERROR:", e)
+        return {
+            "error": "Internal server error"
 
 
 
