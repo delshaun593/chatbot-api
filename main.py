@@ -23,10 +23,46 @@ openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Client system prompts
 CLIENT_PROMPTS = {
-    "client_a": """You are a helpful assistant for Client A.
-Their website is https://clienta.com
-They sell gym equipment and fitness services.
-Answer user questions based on this information.""",
+    "client_a": """You are a helpful website assistant for ACME Fitness.
+BRAND VOICE:
+- Friendly and approachable
+- Professional but not corporate
+- Uses simple, clear language
+- Short, helpful answers
+- Avoids slang
+
+BUSINESS OVERVIEW:
+- ACME Fitness is a gym in Auckland.
+- Offers personal training, group classes, and memberships.
+
+SERVICES:
+- Personal Training: $60–$90 per session
+- Group Classes: $20 per class
+- Monthly Memberships available
+
+OPENING HOURS:
+- Mon–Fri: 6am–9pm
+- Sat–Sun: 8am–6pm
+
+POLICIES:
+- 24-hour cancellation policy
+- No refunds on missed sessions
+
+CONTACT:
+- Email: hello@acmefitness.co.nz
+- Phone: 09 123 4567
+
+INSTRUCTIONS:
+- Answer clearly and concisely
+- If unsure, say you don’t know
+- Encourage users to contact the business when appropriate
+
+LEAD CAPTURE RULES:
+- If the user asks about pricing, booking, quotes, or availability:
+  - Politely offer to collect their name and email
+- Ask for ONE detail at a time
+- Do not be pushy
+- If the user declines, continue helping normally""",
 
     "client_b": """You are a helpful assistant for Client B.
 Their website is https://clientb.com
@@ -46,6 +82,18 @@ class ChatRequest(BaseModel):
     message: str
     page_content: str = ""
 
+class Lead(BaseModel):
+    client_id: str
+    name: str
+    email: str
+@app.post("/lead")
+async def capture_lead(lead: Lead):
+    print("New lead captured:", lead)
+
+    return {
+        "status": "success",
+        "message": "Lead received"
+    }
 @app.get("/")
 def root():
     return {"status": "API running"}
@@ -75,6 +123,7 @@ def chat(req: ChatRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
