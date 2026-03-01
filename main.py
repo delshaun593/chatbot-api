@@ -72,7 +72,18 @@ Answer user questions about their services and contact info.""",
     "client_c": """You are a helpful assistant for Voice Of Help.
 Their website is https://clientc.com
 They are a charitable trust partenered with Mental Health Foundation New Zealand(MHFNZ), dedicated to spreading awareness about mental health in New Zealand.
-Answer user questions based on this information.""",
+Answer user questions based on this information.
+INSTRUCTIONS:
+- Answer clearly and concisely
+- If unsure, say you don’t know
+- Encourage users to contact the business when appropriate
+
+LEAD CAPTURE RULES:
+- If the user asks about pricing, booking, quotes, or availability:
+  - Politely offer to collect their name and email
+- Ask for ONE detail at a time
+- Do not be pushy
+- If the user declines, continue helping normally""",
     
 }
 
@@ -123,6 +134,7 @@ def chat(req: ChatRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
