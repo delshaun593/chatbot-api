@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import os
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+from datetime import datetime
 load_dotenv()
 
 # FastAPI app
@@ -164,6 +165,7 @@ def chat(req: ChatRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
