@@ -4,7 +4,8 @@ from pydantic import BaseModel
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
-
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
 load_dotenv()
 
 # FastAPI app
@@ -20,6 +21,25 @@ app.add_middleware(
 
 # OpenAI client
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+
+import json
+
+SERVICE_ACCOUNT_INFO = json.loads(os.getenv("GOOGLE_SERVICE_ACCOUNT"))
+
+credentials = service_account.Credentials.from_service_account_info(
+    SERVICE_ACCOUNT_INFO,
+    scopes=["https://www.googleapis.com/auth/spreadsheets"]
+)
+
+sheets_service = build("sheets", "v4", credentials=credentials)
+
+# You can store each client’s sheet ID in a dict
+CLIENT_SHEETS = {
+    "client_a": "1rebGfqaW2P6T17VU6M3RVjqgplhpqmLUjuVpP7zUwaU",
+    "client_b": "sheet_id_for_client_b",
+    "client_c": "sheet_id_for_client_c",
+}
 
 # Client system prompts
 CLIENT_PROMPTS = {
@@ -99,12 +119,22 @@ class Lead(BaseModel):
     email: str
 @app.post("/lead")
 async def capture_lead(lead: Lead):
-    print("New lead captured:", lead)
+    sheet_id = CLIENT_SHEETS.get(lead.client_id)
+    if not sheet_id:
+        raise HTTPException(status_code=404, detail="Client spreadsheet not found")
 
-    return {
-        "status": "success",
-        "message": "Lead received"
-    }
+    try:
+        sheets_service.spreadsheets().values().append(
+            spreadsheetId=sheet_id,
+            range="A:C",  # columns: Name | Email | Timestamp
+            valueInputOption="USER_ENTERED",
+            body={"values": [[lead.name, lead.email, str(datetime.now())]]}
+        ).execute()
+
+        return {"status": "success", "message": "Lead saved to Google Sheets"}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save lead: {str(e)}")
 @app.get("/")
 def root():
     return {"status": "API running"}
@@ -134,6 +164,7 @@ def chat(req: ChatRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
