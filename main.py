@@ -36,9 +36,9 @@ sheets_service = build("sheets", "v4", credentials=credentials)
 
 # You can store each client’s sheet ID in a dict
 CLIENT_SHEETS = {
-    "client_a": "1rebGfqaW2P6T17VU6M3RVjqgplhpqmLUjuVpP7zUwaU",
+    "client_a": "sheet_id_for_client_a",
     "client_b": "sheet_id_for_client_b",
-    "client_c": "sheet_id_for_client_c",
+    "client_c": "1rebGfqaW2P6T17VU6M3RVjqgplhpqmLUjuVpP7zUwaU",
 }
 
 # Client system prompts
@@ -164,6 +164,7 @@ def chat(req: ChatRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
