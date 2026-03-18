@@ -118,6 +118,11 @@ class Lead(BaseModel):
     client_id: str
     name: str
     email: str
+
+@app.options("/{full_path:path}")
+async def preflight_handler(full_path: str):
+    return {"status": "ok"}
+    
 @app.post("/lead")
 async def capture_lead(lead: Lead):
     sheet_id = CLIENT_SHEETS.get(lead.client_id)
@@ -140,9 +145,7 @@ async def capture_lead(lead: Lead):
 def root():
     return {"status": "API running"}
     
-@app.options("/{full_path:path}")
-async def preflight_handler():
-    return {"status": "ok"}
+
 
 @app.post("/chat")
 def chat(req: ChatRequest):
