@@ -15,11 +15,11 @@ app = FastAPI()
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # you can restrict later
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # OpenAI client
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -139,6 +139,10 @@ async def capture_lead(lead: Lead):
 @app.get("/")
 def root():
     return {"status": "API running"}
+    
+@app.options("/{full_path:path}")
+async def preflight_handler():
+    return {"status": "ok"}
 
 @app.post("/chat")
 def chat(req: ChatRequest):
