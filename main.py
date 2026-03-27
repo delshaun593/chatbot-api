@@ -16,7 +16,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # you can restrict later
-    allow_credentials=True,
+
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -119,9 +119,7 @@ class Lead(BaseModel):
     name: str
     email: str
 
-@app.options("/{full_path:path}")
-async def preflight_handler(full_path: str):
-    return {"status": "ok"}
+
     
 @app.post("/lead")
 async def capture_lead(lead: Lead):
