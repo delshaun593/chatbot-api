@@ -7,6 +7,11 @@ import asyncio
 import httpx
 from datetime import datetime
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi import FastAPI, HTTPException, Request
+
 from config import CLIENT_PROMPTS, CLIENT_SHEETS, MASTER_SHEET_ID
 from dependencies import openai_client, sheets_service
 from widget import router as widget_router
@@ -29,6 +34,11 @@ app.add_middleware(
 app.include_router(widget_router)
 app.include_router(onboarding_router)
 app.include_router(admin_router)
+
+# limiter
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── Startup: load all clients from master sheet ────────────────────────────────
 @app.on_event("startup")
@@ -81,6 +91,7 @@ def root():
 
 
 @app.post("/lead")
+@limiter.limit("10/minute")
 async def capture_lead(lead: Lead):
     try:
         sheets_service.spreadsheets().values().append(
@@ -100,6 +111,7 @@ async def capture_lead(lead: Lead):
 
 
 @app.post("/chat")
+@limiter.limit("20/minute")
 def chat(req: ChatRequest):
     system_prompt = CLIENT_PROMPTS.get(req.client_id)
     if not system_prompt:
