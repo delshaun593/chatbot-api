@@ -8,6 +8,8 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from datetime import datetime
 from fastapi.responses import StreamingResponse
+import httpx
+import asyncio
 load_dotenv()
 
 # FastAPI app
@@ -144,6 +146,18 @@ async def capture_lead(lead: Lead):
 @app.get("/")
 def root():
     return {"status": "API running"}
+
+@app.on_event("startup")
+async def keep_alive():
+    async def ping():
+        while True:
+            await asyncio.sleep(14 * 60)  # every 14 minutes
+            try:
+                async with httpx.AsyncClient() as client:
+                    await client.get("https://chatbot-api-4ssr.onrender.com/")
+            except:
+                pass
+    asyncio.create_task(ping())
     
 
 
