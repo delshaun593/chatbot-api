@@ -92,7 +92,7 @@ def root():
 
 @app.post("/lead")
 @limiter.limit("10/minute")
-async def capture_lead(lead: Lead):
+async def capture_lead(lead: Lead, request: Request):
     try:
         sheets_service.spreadsheets().values().append(
             spreadsheetId=MASTER_SHEET_ID,
@@ -112,7 +112,7 @@ async def capture_lead(lead: Lead):
 
 @app.post("/chat")
 @limiter.limit("20/minute")
-def chat(req: ChatRequest):
+def chat(req: ChatRequest, request: Request):
     system_prompt = CLIENT_PROMPTS.get(req.client_id)
     if not system_prompt:
         raise HTTPException(status_code=404, detail="Invalid client ID")
