@@ -178,7 +178,14 @@ def chat(req: ChatRequest):
                 if delta:
                     yield delta
 
-    return StreamingResponse(generate(), media_type="text/plain")
+    return StreamingResponse(
+    generate(),
+    media_type="text/plain",
+    headers={
+        "X-Accel-Buffering": "no",
+        "Cache-Control": "no-cache",
+    }
+)
 
 
 
