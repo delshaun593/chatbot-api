@@ -7,6 +7,7 @@ import os
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from datetime import datetime
+from fastapi.responses import StreamingResponse
 load_dotenv()
 
 # FastAPI app
@@ -113,6 +114,7 @@ class ChatRequest(BaseModel):
     client_id: str
     message: str
     page_content: str = ""
+    history: list = [] 
 
 class Lead(BaseModel):
     client_id: str
@@ -152,24 +154,31 @@ def chat(req: ChatRequest):
     if not system_prompt:
         raise HTTPException(status_code=404, detail="Invalid client ID")
 
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {
-            "role": "user",
-            "content": f"Page content:\n{req.page_content}\n\nUser question:\n{req.message}"
-        }
-    ]
+    # Start with system prompt
+    messages = [{"role": "system", "content": system_prompt}]
+    
+    # Add conversation history
+    messages.extend(req.history)
+    
+    # Add current message
+    messages.append({
+        "role": "user",
+        "content": f"Page content:\n{req.page_content}\n\nUser question:\n{req.message}"
+    })
 
-    try:
-        response = openai_client.chat.completions.create(
+    def generate():
+        with openai_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=messages,
-            temperature=0.3
-        )
-        return {"reply": response.choices[0].message.content}
+            temperature=0.3,
+            stream=True
+        ) as stream:
+            for chunk in stream:
+                delta = chunk.choices[0].delta.content
+                if delta:
+                    yield delta
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return StreamingResponse(generate(), media_type="text/plain")
 
 
 
