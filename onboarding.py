@@ -211,8 +211,8 @@ def onboarding_form():
 
 @router.post("/register")
 async def register_client(req: OnboardingRequest):
-    from dependencies import openai_client, sheets_service, CLIENT_PROMPTS
-    from config import MASTER_SHEET_ID
+    from dependencies import openai_client, sheets_service
+    from config import CLIENT_PROMPTS, MASTER_SHEET_ID
 
     prompt_instructions = f"""
 Create a helpful chatbot system prompt for the following business:
