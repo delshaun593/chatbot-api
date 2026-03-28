@@ -11,6 +11,7 @@ from config import CLIENT_PROMPTS, CLIENT_SHEETS, MASTER_SHEET_ID
 from dependencies import openai_client, sheets_service
 from widget import router as widget_router
 from onboarding import router as onboarding_router
+from admin import router as admin_router
 
 load_dotenv()
 
@@ -27,6 +28,7 @@ app.add_middleware(
 # ── Routers ────────────────────────────────────────────────────────────────────
 app.include_router(widget_router)
 app.include_router(onboarding_router)
+app.include_router(admin_router)
 
 # ── Startup: load all clients from master sheet ────────────────────────────────
 @app.on_event("startup")
@@ -34,7 +36,7 @@ async def load_clients_from_sheet():
     try:
         result = sheets_service.spreadsheets().values().get(
             spreadsheetId=MASTER_SHEET_ID,
-            range="A:E"
+            range="clients!A:F"
         ).execute()
         rows = result.get("values", [])
         loaded = 0
@@ -80,18 +82,19 @@ def root():
 
 @app.post("/lead")
 async def capture_lead(lead: Lead):
-    sheet_id = CLIENT_SHEETS.get(lead.client_id)
-    if not sheet_id:
-        raise HTTPException(status_code=404, detail="Client spreadsheet not found")
-
     try:
         sheets_service.spreadsheets().values().append(
-            spreadsheetId=sheet_id,
-            range="A:C",
+            spreadsheetId=MASTER_SHEET_ID,
+            range="leads!A:D",
             valueInputOption="USER_ENTERED",
-            body={"values": [[lead.name, lead.email, str(datetime.now())]]}
+            body={"values": [[
+                lead.client_id,
+                lead.name,
+                lead.email,
+                str(datetime.now())
+            ]]}
         ).execute()
-        return {"status": "success", "message": "Lead saved to Google Sheets"}
+        return {"status": "success", "message": "Lead saved"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save lead: {str(e)}")
 
@@ -129,8 +132,6 @@ def chat(req: ChatRequest):
             "Cache-Control": "no-cache",
         }
     )
-
-
 
 
 
