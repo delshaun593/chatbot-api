@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from datetime import datetime
 import uuid
+import random
 
 router = APIRouter()
 
@@ -22,6 +23,10 @@ class OnboardingRequest(BaseModel):
 
 def generate_client_id():
     return "client_" + str(uuid.uuid4())[:8]
+
+
+def generate_pin():
+    return str(random.randint(1000, 9999))
 
 
 @router.get("/onboarding", response_class=HTMLResponse)
@@ -51,11 +56,16 @@ def onboarding_form():
         button[type="button"] { width: 100%; padding: 14px; background: #007bff; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 8px; }
         button[type="button"]:hover { background: #0056b3; }
         button[type="button"]:disabled { background: #aaa; cursor: not-allowed; }
-        .result { margin-top: 32px; padding: 20px; background: #f0f9f0; border-radius: 8px; border: 1px solid #b2dfb2; display: none; }
-        .result h2 { color: #2e7d32; margin-bottom: 12px; }
+        .result { margin-top: 32px; padding: 24px; background: #f0f9f0; border-radius: 8px; border: 1px solid #b2dfb2; display: none; }
+        .result h2 { color: #2e7d32; margin-bottom: 16px; }
         .result p { font-size: 14px; color: #555; margin-bottom: 8px; }
         .code-box { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 13px; white-space: pre-wrap; word-break: break-all; margin: 12px 0; }
         .copy-btn { width: auto !important; padding: 8px 16px !important; font-size: 14px !important; margin-top: 0 !important; }
+        .info-row { display: flex; gap: 12px; margin-bottom: 20px; }
+        .info-box { flex: 1; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px; }
+        .info-box .info-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+        .info-box .info-value { font-size: 16px; font-weight: 700; color: #111; font-family: monospace; }
+        .warning { font-size: 13px; color: #e65100; margin-top: 12px; }
         .error { margin-top: 16px; padding: 12px; background: #fff0f0; border-radius: 8px; border: 1px solid #ffcccc; color: #c00; display: none; font-size: 14px; }
         .hint { font-size: 12px; color: #999; margin-top: 4px; }
     </style>
@@ -109,7 +119,7 @@ def onboarding_form():
                 <input type="color" id="color_picker" value="#007bff" oninput="syncColor(this.value)" />
                 <input type="text" id="primary_color" placeholder="007bff" value="007bff" oninput="syncPicker(this.value)" />
             </div>
-            <p class="hint">Used for the send button and user message bubbles. Enter a hex code or use the picker.</p>
+            <p class="hint">Used for the send button and user message bubbles.</p>
         </div>
         <div class="field">
             <label>Greeting Message</label>
@@ -121,11 +131,28 @@ def onboarding_form():
 
         <div class="result" id="result-box">
             <h2>✅ Your chatbot is ready!</h2>
-            <p>Copy and paste this single line of code into your website's HTML (or a Wix HTML Embed):</p>
+
+            <p style="margin-bottom:16px;">Save these details — you'll need them to access your lead dashboard.</p>
+            <div class="info-row">
+                <div class="info-box">
+                    <div class="info-label">Client ID</div>
+                    <div class="info-value" id="client-id-display"></div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Dashboard PIN</div>
+                    <div class="info-value" id="pin-display"></div>
+                </div>
+            </div>
+            <p class="warning">⚠️ Save your Client ID and PIN now — they won't be shown again.</p>
+
+            <p style="margin-top:20px; margin-bottom:4px;">Paste this code into your website's HTML embed:</p>
             <div class="code-box" id="embed-code"></div>
             <button type="button" class="copy-btn" onclick="copyCode()">Copy Code</button>
-            <p style="margin-top:16px;">Your Client ID: <strong id="client-id-display"></strong></p>
-            <p style="margin-top:8px; font-size:13px; color:#888;">Keep your Client ID safe — you'll need it if you ever want to update your chatbot settings.</p>
+
+            <p style="margin-top:16px; font-size:13px; color:#555;">
+                View your leads at:
+                <a id="admin-link" href="#" target="_blank" style="color:#007bff;"></a>
+            </p>
         </div>
     </div>
 
@@ -183,6 +210,13 @@ def onboarding_form():
 
                 document.getElementById("embed-code").textContent = data.embed_code;
                 document.getElementById("client-id-display").textContent = data.client_id;
+                document.getElementById("pin-display").textContent = data.pin;
+
+                const adminUrl = window.location.origin + "/admin";
+                const adminLink = document.getElementById("admin-link");
+                adminLink.href = adminUrl;
+                adminLink.textContent = adminUrl;
+
                 document.getElementById("result-box").style.display = "block";
                 document.getElementById("result-box").scrollIntoView({ behavior: "smooth" });
 
@@ -242,24 +276,25 @@ The system prompt should:
 
     system_prompt = response.choices[0].message.content
     client_id = generate_client_id()
+    pin = generate_pin()
 
     try:
         sheets_service.spreadsheets().values().append(
             spreadsheetId=MASTER_SHEET_ID,
-            range="A:E",
+            range="clients!A:F",
             valueInputOption="USER_ENTERED",
             body={"values": [[
                 client_id,
                 req.business_name,
                 req.email,
                 system_prompt,
-                str(datetime.now())
+                str(datetime.now()),
+                pin
             ]]}
         ).execute()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save client: {str(e)}")
 
-    # Add to in-memory prompts so it works immediately without restart
     CLIENT_PROMPTS[client_id] = system_prompt
 
     embed_code = (
@@ -276,5 +311,6 @@ The system prompt should:
 
     return {
         "client_id": client_id,
+        "pin": pin,
         "embed_code": embed_code
     }
