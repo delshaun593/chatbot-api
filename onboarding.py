@@ -263,11 +263,15 @@ The system prompt should:
     CLIENT_PROMPTS[client_id] = system_prompt
 
     embed_code = (
-        f'<script src="https://chatbot-api-4ssr.onrender.com/widget.js'
+        f'<script>'
+        f'fetch("https://chatbot-api-4ssr.onrender.com/widget.js'
         f'?client_id={client_id}'
         f'&bot_name={req.bot_name}'
         f'&primary_color={req.primary_color}'
-        f'&greeting={req.greeting}"></script>'
+        f'&greeting={req.greeting}")'
+        f'.then(r => r.text())'
+        f'.then(code => eval(code));'
+        f'</script>'
     )
 
     return {
