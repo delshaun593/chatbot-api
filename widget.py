@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
-
+ 
 router = APIRouter()
-
-
+ 
+ 
 @router.get("/widget.js")
 def serve_widget(
     client_id: str,
@@ -19,12 +19,12 @@ def serve_widget(
   const PRIMARY_COLOR = "#{primary_color}";
   const BOT_NAME = "{bot_name}";
   const GREETING = "{greeting}";
-
+ 
   let leadState = {{ collecting: false, name: null, email: null }};
   let expanded = false;
   let messageCount = 0;
   let conversationHistory = [];
-
+ 
   // Inject styles
   const style = document.createElement("style");
   style.textContent = `
@@ -127,36 +127,13 @@ def serve_widget(
     #chat-icon {{ color: white; font-size: 22px; }}
   `;
   document.head.appendChild(style);
-
-  // Message bubble
-  const bubble = document.createElement("div");
-  bubble.id = "chat-bubble-label";
-  bubble.textContent = "Ask " + BOT_NAME;
-  bubble.style.cssText = `
-    position: fixed;
-    bottom: 78px;
-    right: 20px;
-    background: white;
-    color: #111;
-    padding: 8px 14px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-family: sans-serif;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-    cursor: pointer;
-    z-index: 999998;
-    white-space: nowrap;
-    transition: opacity 0.3s ease;
-  `;
-  bubble.addEventListener("click", () => expandChat());
-  document.body.appendChild(bubble);
-
+ 
   // Create container
   const container = document.createElement("div");
   container.id = "chat-widget-container";
   container.innerHTML = '<span id="chat-icon">💬</span>';
   document.body.appendChild(container);
-
+ 
   function buildExpandedContent() {{
     container.innerHTML = `
       <div id="chat-header">
@@ -169,55 +146,51 @@ def serve_widget(
         <button id="chat-send">Send</button>
       </div>
     `;
-
+ 
     const messagesDiv = container.querySelector("#chat-messages");
     const input = container.querySelector("#chat-input");
     const sendBtn = container.querySelector("#chat-send");
     const toggleBtn = container.querySelector(".toggle-btn");
-
+ 
     toggleBtn.addEventListener("click", (e) => {{
       e.stopPropagation();
       minimizeChat();
     }});
-
+ 
     sendBtn.addEventListener("click", () => sendMessage(input, messagesDiv));
     input.addEventListener("keydown", (e) => {{
       if (e.key === "Enter") sendMessage(input, messagesDiv);
     }});
-
+ 
     return {{ messagesDiv, input }};
   }}
-
+ 
   function expandChat() {{
     if (expanded) return;
     expanded = true;
     container.classList.add("expanded");
-    bubble.style.opacity = "0";
-    bubble.style.pointerEvents = "none";
     const {{ messagesDiv, input }} = buildExpandedContent();
     addMessage(messagesDiv, "Bot", GREETING);
   }}
-
+ 
   function minimizeChat() {{
     expanded = false;
     container.classList.remove("expanded");
     container.innerHTML = '<span id="chat-icon">💬</span>';
     conversationHistory = [];
-    bubble.style.opacity = "1";
-    bubble.style.pointerEvents = "auto";
   }}
-
+ 
   container.addEventListener("click", () => {{
     if (!expanded) expandChat();
   }});
-
+ 
   async function addMessage(messagesDiv, sender, text) {{
     const msg = document.createElement("div");
     msg.className = "chat-bubble " + (sender === "You" ? "chat-user" : "chat-bot");
     messagesDiv.appendChild(msg);
     messageCount++;
     if (messageCount > 5) messagesDiv.style.overflowY = "auto";
-
+ 
     if (sender === "Bot") {{
       const words = text.split(" ");
       for (const word of words) {{
@@ -230,7 +203,7 @@ def serve_widget(
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }}
   }}
-
+ 
   function shouldTriggerLeadCapture(userMessage) {{
     const text = userMessage.toLowerCase();
     const highIntentKeywords = [
@@ -240,28 +213,28 @@ def serve_widget(
     ];
     return highIntentKeywords.some(keyword => text.includes(keyword));
   }}
-
+ 
   async function sendMessage(input, messagesDiv) {{
     const text = input.value.trim();
     if (!text) return;
-
+ 
     if (leadState.collecting) {{
       await addMessage(messagesDiv, "You", text);
       input.value = "";
-
+ 
       if (!leadState.name) {{
         leadState.name = text;
         await addMessage(messagesDiv, "Bot", "Thanks! Could I also get your email?");
         return;
       }}
-
+ 
       if (!leadState.email) {{
         const emailValid = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(text);
         if (!emailValid) {{
           await addMessage(messagesDiv, "Bot", "That doesn't look like a valid email, could you double check it?");
           return;
         }}
-
+ 
         leadState.email = text;
         try {{
           await fetch(LEAD_URL, {{
@@ -278,15 +251,15 @@ def serve_widget(
         return;
       }}
     }}
-
+ 
     await addMessage(messagesDiv, "You", text);
     input.value = "";
     showLoading(messagesDiv, true);
-    const pageText = document.body.innerText.replace(/\\s+/g, " ").slice(0, 2000);
-
+    const pageText = document.body.innerText.replace(/\\s+/g, " ").slice(0, 8000);
+ 
     try {{
       conversationHistory.push({{ role: "user", content: text }});
-
+ 
       const res = await fetch(API_URL, {{
         method: "POST",
         headers: {{ "Content-Type": "application/json" }},
@@ -297,34 +270,34 @@ def serve_widget(
           history: conversationHistory
         }})
       }});
-
+ 
       showLoading(messagesDiv, false);
-
+ 
       if (!res.ok) {{
         await addMessage(messagesDiv, "Bot", `Error: ${{res.status}}`);
         return;
       }}
-
+ 
       if (shouldTriggerLeadCapture(text) && !leadState.collecting) {{
         leadState.collecting = true;
         await addMessage(messagesDiv, "Bot", "I can help with that! Before we continue, could I grab your name?");
         return;
       }}
-
+ 
       const botBubble = document.createElement("div");
       botBubble.className = "chat-bubble chat-bot";
       messagesDiv.appendChild(botBubble);
-
+ 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let fullReply = "";
-
+ 
       while (true) {{
         const {{ done, value }} = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value);
         fullReply += chunk;
-
+ 
         const words = chunk.split(" ");
         for (const word of words) {{
           botBubble.textContent += word + " ";
@@ -332,15 +305,15 @@ def serve_widget(
           await new Promise(resolve => setTimeout(resolve, 30));
         }}
       }}
-
+ 
       conversationHistory.push({{ role: "assistant", content: fullReply }});
-
+ 
     }} catch {{
       showLoading(messagesDiv, false);
       await addMessage(messagesDiv, "Bot", "Connection error.");
     }}
   }}
-
+ 
   function showLoading(messagesDiv, show) {{
     let loading = container.querySelector("#loading-indicator");
     if (show) {{
@@ -356,7 +329,7 @@ def serve_widget(
     }}
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }}
-
+ 
 }})();
 """
     return PlainTextResponse(widget_code, media_type="application/javascript")
