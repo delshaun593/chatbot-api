@@ -15,6 +15,7 @@ class OnboardingRequest(BaseModel):
     hours: str
     contact: str
     email: str
+    website_url: str = ""
     extra_info: str = ""
     bot_name: str = "Assistant"
     primary_color: str = "007bff"
@@ -68,6 +69,7 @@ def onboarding_form():
         .warning { font-size: 13px; color: #e65100; margin-top: 12px; }
         .error { margin-top: 16px; padding: 12px; background: #fff0f0; border-radius: 8px; border: 1px solid #ffcccc; color: #c00; display: none; font-size: 14px; }
         .hint { font-size: 12px; color: #999; margin-top: 4px; }
+        .progress { display: none; margin-top: 16px; padding: 12px; background: #f0f7ff; border-radius: 8px; border: 1px solid #b3d4ff; color: #0056b3; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -84,6 +86,11 @@ def onboarding_form():
         <div class="field">
             <label>Industry *</label>
             <input type="text" id="industry" placeholder="e.g. Plumbing, Fitness, Legal" />
+        </div>
+        <div class="field">
+            <label>Website URL <span style="font-weight:400;color:#888">(recommended — lets the chatbot learn your full site)</span></label>
+            <input type="text" id="website_url" placeholder="e.g. https://yourbusiness.co.nz" />
+            <p class="hint">We'll automatically scan your website to make the chatbot smarter.</p>
         </div>
         <div class="field">
             <label>Services Offered *</label>
@@ -127,6 +134,7 @@ def onboarding_form():
         </div>
 
         <button type="button" id="submit-btn" onclick="submitForm()">Generate My Chatbot →</button>
+        <div class="progress" id="progress-box">⏳ Scanning your website and generating your chatbot — this may take 20–30 seconds...</div>
         <div class="error" id="error-box"></div>
 
         <div class="result" id="result-box">
@@ -170,6 +178,7 @@ def onboarding_form():
         async function submitForm() {
             const btn = document.getElementById("submit-btn");
             const errorBox = document.getElementById("error-box");
+            const progressBox = document.getElementById("progress-box");
             errorBox.style.display = "none";
 
             const fields = {
@@ -179,6 +188,7 @@ def onboarding_form():
                 hours: document.getElementById("hours").value.trim(),
                 contact: document.getElementById("contact").value.trim(),
                 email: document.getElementById("email").value.trim(),
+                website_url: document.getElementById("website_url").value.trim(),
                 extra_info: document.getElementById("extra_info").value.trim(),
                 bot_name: document.getElementById("bot_name").value.trim() || "Assistant",
                 primary_color: document.getElementById("primary_color").value.trim().replace("#", "") || "007bff",
@@ -196,6 +206,9 @@ def onboarding_form():
 
             btn.disabled = true;
             btn.textContent = "Generating your chatbot...";
+            if (fields.website_url) {
+                progressBox.style.display = "block";
+            }
 
             try {
                 const res = await fetch("/register", {
@@ -217,12 +230,14 @@ def onboarding_form():
                 adminLink.href = adminUrl;
                 adminLink.textContent = adminUrl;
 
+                progressBox.style.display = "none";
                 document.getElementById("result-box").style.display = "block";
                 document.getElementById("result-box").scrollIntoView({ behavior: "smooth" });
 
             } catch {
                 errorBox.textContent = "Something went wrong. Please try again.";
                 errorBox.style.display = "block";
+                progressBox.style.display = "none";
             } finally {
                 btn.disabled = false;
                 btn.textContent = "Generate My Chatbot →";
@@ -247,6 +262,16 @@ def onboarding_form():
 async def register_client(req: OnboardingRequest):
     from dependencies import openai_client, sheets_service
     from config import CLIENT_PROMPTS, MASTER_SHEET_ID
+    from crawler import crawl_website
+
+    # Crawl website if URL provided
+    website_content = ""
+    if req.website_url:
+        try:
+            website_content = crawl_website(req.website_url)
+            print(f"✅ Crawled {req.website_url} — {len(website_content)} chars")
+        except Exception as e:
+            print(f"⚠️ Failed to crawl {req.website_url}: {e}")
 
     prompt_instructions = f"""
 Create a helpful chatbot system prompt for the following business:
@@ -258,9 +283,12 @@ Opening Hours: {req.hours}
 Contact Info: {req.contact}
 Extra Info: {req.extra_info}
 
+{"Website Content (scraped from their site):" + website_content if website_content else ""}
+
 The system prompt should:
 - Give the bot a friendly, professional personality
 - Include all the business details above
+- If website content is provided, use it to answer questions accurately
 - Instruct the bot to answer clearly and concisely
 - Instruct the bot to encourage users to get in touch when appropriate
 - Include lead capture rules: collect name and email when users ask about pricing, booking, or availability
