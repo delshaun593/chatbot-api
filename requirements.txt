@@ -8,3 +8,5 @@ google-auth-httplib2
 google-auth-oauthlib
 httpx
 slowapi
+beautifulsoup4
+requests
