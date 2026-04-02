@@ -14,8 +14,10 @@ def serve_widget(
     widget_code = f"""
 (function() {{
   const CLIENT_ID = "{client_id}";
-  const API_URL = "https://chatbot-api-4ssr.onrender.com/chat";
-  const LEAD_URL = "https://chatbot-api-4ssr.onrender.com/lead";
+  const BASE_URL = "https://chatbot-api-4ssr.onrender.com";
+  const API_URL = BASE_URL + "/chat";
+  const LEAD_URL = BASE_URL + "/lead";
+  const SESSION_URL = BASE_URL + "/session";
   const PRIMARY_COLOR = "#{primary_color}";
   const BOT_NAME = "{bot_name}";
   const GREETING = "{greeting}";
@@ -27,7 +29,7 @@ def serve_widget(
   let sessionId = "";
  
   // Create session on load
-  fetch(API_URL.replace("/chat", "/session"), {{
+  fetch(SESSION_URL, {{
     method: "POST",
     headers: {{ "Content-Type": "application/json" }},
     body: JSON.stringify({{
