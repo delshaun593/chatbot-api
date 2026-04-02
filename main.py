@@ -102,7 +102,8 @@ async def create_session(req: dict):
             "page_url": req.get("page_url", "")
         }).execute()
         return {"session_id": session_id}
-    except Exception:
+    except Exception as e:
+        print(f"⚠️ Session creation failed: {e}")
         return {"session_id": str(uuid.uuid4())}
  
  
@@ -149,7 +150,8 @@ def chat(req: ChatRequest, request: Request):
                 "role": "user",
                 "content": req.message
             }).execute()
-    except Exception:
+    except Exception as e:
+        print(f"⚠️ Message logging failed: {e}")
         pass
  
     full_reply = []
