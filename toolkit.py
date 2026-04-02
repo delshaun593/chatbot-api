@@ -11,6 +11,7 @@ def serve_toolkit(
     client_id: str,
     bot_name: str = "Assistant",
     primary_color: str = "007bff",
+    header_color: str = "",
     greeting: str = "Hi there 👋 How can I help you?",
 ):
     """
@@ -25,6 +26,7 @@ def serve_toolkit(
         f"?client_id={client_id}"
         f"&bot_name={bot_name}"
         f"&primary_color={primary_color}"
+        f"&header_color={header_color}"
         f"&greeting={greeting}"
     )
 

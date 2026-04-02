@@ -19,6 +19,7 @@ class OnboardingRequest(BaseModel):
     extra_info: str = ""
     bot_name: str = "Assistant"
     primary_color: str = "007bff"
+    header_color: str = ""
     greeting: str = "Hi there 👋 How can I help you?"
 
 
@@ -129,6 +130,14 @@ def onboarding_form():
             <p class="hint">Used for the send button and user message bubbles.</p>
         </div>
         <div class="field">
+            <label>Header Colour <span style="font-weight:400;color:#888">(optional — defaults to primary colour)</span></label>
+            <div class="color-row">
+                <input type="color" id="header_picker" value="#007bff" oninput="syncHeaderColor(this.value)" />
+                <input type="text" id="header_color" placeholder="Leave blank to match primary" oninput="syncHeaderPicker(this.value)" />
+            </div>
+            <p class="hint">The colour of the chat window header bar.</p>
+        </div>
+        <div class="field">
             <label>Greeting Message</label>
             <input type="text" id="greeting" placeholder="e.g. Hi there 👋 How can I help you today?" />
         </div>
@@ -181,6 +190,16 @@ def onboarding_form():
             }
         }
 
+        function syncHeaderColor(hex) {
+            document.getElementById("header_color").value = hex.replace("#", "");
+        }
+
+        function syncHeaderPicker(val) {
+            if (/^[0-9A-Fa-f]{6}$/.test(val)) {
+                document.getElementById("header_picker").value = "#" + val;
+            }
+        }
+
         async function submitForm() {
             const btn = document.getElementById("submit-btn");
             const errorBox = document.getElementById("error-box");
@@ -198,6 +217,7 @@ def onboarding_form():
                 extra_info: document.getElementById("extra_info").value.trim(),
                 bot_name: document.getElementById("bot_name").value.trim() || "Assistant",
                 primary_color: document.getElementById("primary_color").value.trim().replace("#", "") || "007bff",
+                header_color: document.getElementById("header_color").value.trim().replace("#", ""),
                 greeting: document.getElementById("greeting").value.trim() || "Hi there 👋 How can I help you?"
             };
 
@@ -347,6 +367,7 @@ The system prompt should:
         f'?client_id={client_id}'
         f'&bot_name={req.bot_name}'
         f'&primary_color={req.primary_color}'
+        f'&header_color={req.header_color}'
         f'&greeting={req.greeting}")'
         f'.then(r => r.text())'
         f'.then(code => eval(code));'
@@ -359,6 +380,7 @@ The system prompt should:
         f'?client_id={client_id}'
         f'&bot_name={req.bot_name}'
         f'&primary_color={req.primary_color}'
+        f'&header_color={req.header_color}'
         f'&greeting={req.greeting}")'
         f'.then(r => r.text())'
         f'.then(code => eval(code));'
