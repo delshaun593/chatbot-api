@@ -24,6 +24,20 @@ def serve_widget(
   let expanded = false;
   let messageCount = 0;
   let conversationHistory = [];
+  let sessionId = "";
+ 
+  // Create session on load
+  fetch(API_URL.replace("/chat", "/session"), {{
+    method: "POST",
+    headers: {{ "Content-Type": "application/json" }},
+    body: JSON.stringify({{
+      client_id: CLIENT_ID,
+      page_url: window.location.href
+    }})
+  }})
+  .then(r => r.json())
+  .then(data => {{ sessionId = data.session_id; }})
+  .catch(() => {{}});
  
   // Inject styles
   const style = document.createElement("style");
@@ -127,30 +141,7 @@ def serve_widget(
     #chat-icon {{ color: white; font-size: 22px; }}
   `;
   document.head.appendChild(style);
-    // Message bubble
-  const bubble = document.createElement("div");
-  bubble.id = "chat-bubble-label";
-  bubble.textContent = "Ask " + BOT_NAME;
-  bubble.style.cssText = `
-    position: fixed;
-    bottom: 78px;
-    right: 20px;
-    background: white;
-    color: #111;
-    padding: 8px 14px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-family: sans-serif;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-    cursor: pointer;
-    z-index: 999998;
-    white-space: nowrap;
-    transition: opacity 0.3s ease;
-  `;
-  bubble.addEventListener("click", () => expandChat());
-  document.body.appendChild(bubble);
-
-
+ 
   // Create container
   const container = document.createElement("div");
   container.id = "chat-widget-container";
@@ -192,8 +183,6 @@ def serve_widget(
     if (expanded) return;
     expanded = true;
     container.classList.add("expanded");
-    bubble.style.opacity = "0";
-    bubble.style.pointerEvents = "none";
     const {{ messagesDiv, input }} = buildExpandedContent();
     addMessage(messagesDiv, "Bot", GREETING);
   }}
@@ -203,8 +192,6 @@ def serve_widget(
     container.classList.remove("expanded");
     container.innerHTML = '<span id="chat-icon">💬</span>';
     conversationHistory = [];
-    bubble.style.opacity = "1";
-    bubble.style.pointerEvents = "auto";
   }}
  
   container.addEventListener("click", () => {{
@@ -294,7 +281,9 @@ def serve_widget(
           client_id: CLIENT_ID,
           message: text,
           page_content: pageText,
-          history: conversationHistory
+          page_url: window.location.href,
+          history: conversationHistory,
+          session_id: sessionId
         }})
       }});
  
