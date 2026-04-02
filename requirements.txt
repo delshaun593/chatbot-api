@@ -10,3 +10,4 @@ httpx
 slowapi
 beautifulsoup4
 requests
+supabase
