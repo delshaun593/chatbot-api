@@ -122,7 +122,7 @@ def serve_widget(
       animation: cwFadeSlideIn 0.4s ease forwards;
     }}
     #cw-bubble:hover {{ transform: translateY(-2px); }}
-    #cw-bubble.hidden {{ opacity: 0; pointer-events: none; transform: translateY(6px); }}
+    #cw-bubble.hidden {{ opacity: 0 !important; pointer-events: none !important; transform: translateY(6px) !important; }}
 
     #cw-window {{
       position: fixed;
