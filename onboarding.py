@@ -153,9 +153,15 @@ def onboarding_form():
             </div>
             <p class="warning">⚠️ Save your Client ID and PIN now — they won't be shown again.</p>
 
-            <p style="margin-top:20px; margin-bottom:4px;">Paste this code into your website's HTML embed:</p>
+            <p style="margin-top:20px; margin-bottom:4px;">Paste this code before the <code>&lt;/body&gt;</code> tag on every page of your website:</p>
             <div class="code-box" id="embed-code"></div>
             <button type="button" class="copy-btn" onclick="copyCode()">Copy Code</button>
+
+            <details style="margin-top:20px;">
+                <summary style="cursor:pointer;font-size:13px;color:#666;">Chatbot only (without banner &amp; reviews)</summary>
+                <div class="code-box" id="widget-only-code" style="margin-top:10px;"></div>
+                <button type="button" class="copy-btn" onclick="copySingleCode()">Copy</button>
+            </details>
 
             <p style="margin-top:16px; font-size:13px; color:#555;">
                 View your leads at:
@@ -222,6 +228,7 @@ def onboarding_form():
                 const data = await res.json();
 
                 document.getElementById("embed-code").textContent = data.embed_code;
+                document.getElementById("widget-only-code").textContent = data.widget_only_code || "";
                 document.getElementById("client-id-display").textContent = data.client_id;
                 document.getElementById("pin-display").textContent = data.pin;
 
@@ -250,6 +257,15 @@ def onboarding_form():
                 const btn = document.querySelector(".copy-btn");
                 btn.textContent = "Copied!";
                 setTimeout(() => btn.textContent = "Copy Code", 2000);
+            });
+        }
+
+        function copySingleCode() {
+            const code = document.getElementById("widget-only-code").textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btns = document.querySelectorAll(".copy-btn");
+                btns[1].textContent = "Copied!";
+                setTimeout(() => btns[1].textContent = "Copy", 2000);
             });
         }
     </script>
@@ -337,8 +353,21 @@ The system prompt should:
         f'</script>'
     )
 
+    toolkit_embed_code = (
+        f'<script>'
+        f'fetch("https://chatbot-api-4ssr.onrender.com/toolkit.js'
+        f'?client_id={client_id}'
+        f'&bot_name={req.bot_name}'
+        f'&primary_color={req.primary_color}'
+        f'&greeting={req.greeting}")'
+        f'.then(r => r.text())'
+        f'.then(code => eval(code));'
+        f'</script>'
+    )
+
     return {
         "client_id": client_id,
         "pin": pin,
-        "embed_code": embed_code
+        "embed_code": toolkit_embed_code,
+        "widget_only_code": embed_code,
     }

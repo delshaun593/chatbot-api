@@ -16,6 +16,9 @@ from dependencies import openai_client, sheets_service
 from widget import router as widget_router
 from onboarding import router as onboarding_router
 from admin import router as admin_router
+from banner import router as banner_router
+from reviews import router as reviews_router
+from toolkit import router as toolkit_router
 from database import supabase
  
 load_dotenv()
@@ -39,6 +42,9 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.include_router(widget_router)
 app.include_router(onboarding_router)
 app.include_router(admin_router)
+app.include_router(banner_router)
+app.include_router(reviews_router)
+app.include_router(toolkit_router)
  
 # ── Startup: load all clients from master sheet ────────────────────────────────
 @app.on_event("startup")

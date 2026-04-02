@@ -81,6 +81,59 @@ def admin_page():
         .page-item:last-child { border-bottom: none; }
         .page-url { color: #333; word-break: break-all; flex: 1; margin-right: 12px; }
         .page-count { background: #007bff; color: white; border-radius: 12px; padding: 2px 10px; font-size: 12px; white-space: nowrap; }
+
+        /* Banner tab */
+        .tk-form-field { margin-bottom: 18px; }
+        .tk-form-field label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; }
+        .tk-form-field input[type="text"], .tk-form-field input[type="url"] {
+            width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px;
+            font-size: 14px; outline: none; font-family: inherit; box-sizing: border-box;
+        }
+        .tk-form-field input:focus { border-color: #007bff; }
+        .tk-color-row { display: flex; gap: 8px; align-items: center; }
+        .tk-color-row input[type="color"] { width: 40px; height: 36px; padding: 2px; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
+        .tk-color-row input[type="text"] { flex: 1; }
+        .tk-toggle-row { display: flex; align-items: center; gap: 10px; }
+        .tk-toggle-row input[type="checkbox"] { width: auto; margin: 0; cursor: pointer; }
+        .tk-toggle-row label { margin: 0; font-size: 14px; cursor: pointer; }
+        .tk-save-btn { padding: 10px 28px; background: #007bff; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; width: auto; transition: background 0.2s; }
+        .tk-save-btn:hover { background: #0056b3; }
+        .tk-save-btn:disabled { background: #aaa; cursor: not-allowed; }
+        .tk-success { color: #2e7d32; font-size: 13px; margin-top: 10px; display: none; }
+        .tk-error   { color: #c00;    font-size: 13px; margin-top: 10px; display: none; }
+        .tk-hint    { font-size: 12px; color: #999; margin-top: 4px; }
+        .tk-section-desc { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.5; }
+
+        /* Reviews tab */
+        .tk-add-form { background: #f8f9fa; border-radius: 10px; padding: 18px; margin-bottom: 24px; border: 1px solid #eee; }
+        .tk-add-form h4 { font-size: 14px; font-weight: 700; margin-bottom: 14px; color: #333; }
+        .tk-add-form input, .tk-add-form textarea, .tk-add-form select {
+            width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px;
+            font-size: 14px; outline: none; margin-bottom: 10px;
+            font-family: inherit; box-sizing: border-box;
+        }
+        .tk-add-form input:focus, .tk-add-form textarea:focus { border-color: #007bff; }
+        .tk-add-form textarea { resize: vertical; min-height: 72px; }
+        .tk-rev-card-admin {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            padding: 12px 14px; border: 1px solid #eee; border-radius: 10px;
+            margin-bottom: 10px; background: #fff; gap: 12px;
+        }
+        .tk-rev-info { flex: 1; }
+        .tk-rev-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .tk-rev-admin-name  { font-weight: 700; font-size: 13px; color: #111; }
+        .tk-rev-admin-stars { color: #f59e0b; font-size: 13px; }
+        .tk-rev-admin-text  { font-size: 13px; color: #444; line-height: 1.45; }
+        .tk-rev-hidden-tag  { font-size: 11px; color: #e65100; font-weight: 700; background: #fff3e0; padding: 2px 8px; border-radius: 10px; }
+        .tk-rev-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .tk-rev-act-btn {
+            padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+            cursor: pointer; border: 1px solid #ddd; background: #fff; color: #555;
+            transition: all 0.15s;
+        }
+        .tk-rev-act-btn:hover  { background: #f5f5f5; }
+        .tk-rev-act-btn.danger { color: #c00; border-color: #fcc; }
+        .tk-rev-act-btn.danger:hover { background: #fff5f5; }
     </style>
 </head>
 <body>
@@ -140,6 +193,8 @@ def admin_page():
                     <div class="tab" onclick="switchTab('faqs')">Top Questions</div>
                     <div class="tab" onclick="switchTab('pages')">Top Pages</div>
                     <div class="tab" onclick="switchTab('volume')">Chat Volume</div>
+                    <div class="tab" onclick="switchTab('banner')">📣 Banner</div>
+                    <div class="tab" onclick="switchTab('reviews')">⭐ Reviews</div>
                 </div>
  
                 <!-- Leads Tab -->
@@ -181,6 +236,65 @@ def admin_page():
                     <h3>Chats per day (last 7 days)</h3>
                     <div class="chart-container" id="volume-chart"></div>
                 </div>
+
+                <!-- Banner Tab -->
+                <div class="tab-content" id="tab-banner">
+                    <p class="tk-section-desc">Set a promotional announcement bar that appears at the top of your website. Visitors can dismiss it — it won't reappear for that browser session.</p>
+                    <div class="tk-form-field">
+                        <label>Banner Message *</label>
+                        <input type="text" id="banner-message" placeholder="e.g. &#x1F389; Free consultation this month — book now!" />
+                    </div>
+                    <div class="tk-form-field">
+                        <label>Button Text <span style="font-weight:400;color:#999">(optional)</span></label>
+                        <input type="text" id="banner-cta-text" placeholder="e.g. Book Now" />
+                    </div>
+                    <div class="tk-form-field">
+                        <label>Button Link <span style="font-weight:400;color:#999">(optional)</span></label>
+                        <input type="text" id="banner-cta-url" placeholder="e.g. https://yourbusiness.com/book" />
+                    </div>
+                    <div class="tk-form-field">
+                        <label>Background Colour</label>
+                        <div class="tk-color-row">
+                            <input type="color" id="banner-bg-picker" value="#1a1a2e" oninput="document.getElementById('banner-bg-hex').value=this.value.replace('#','')" />
+                            <input type="text" id="banner-bg-hex" value="1a1a2e" maxlength="6" oninput="if(/^[0-9A-Fa-f]{6}$/.test(this.value)) document.getElementById('banner-bg-picker').value='#'+this.value" />
+                        </div>
+                    </div>
+                    <div class="tk-form-field">
+                        <label>Text Colour</label>
+                        <div class="tk-color-row">
+                            <input type="color" id="banner-text-picker" value="#ffffff" oninput="document.getElementById('banner-text-hex').value=this.value.replace('#','')" />
+                            <input type="text" id="banner-text-hex" value="ffffff" maxlength="6" oninput="if(/^[0-9A-Fa-f]{6}$/.test(this.value)) document.getElementById('banner-text-picker').value='#'+this.value" />
+                        </div>
+                    </div>
+                    <div class="tk-form-field tk-toggle-row">
+                        <input type="checkbox" id="banner-active" checked />
+                        <label for="banner-active">Banner Active</label>
+                    </div>
+                    <button class="tk-save-btn" id="banner-save-btn" onclick="saveBanner()">Save Banner</button>
+                    <div class="tk-success" id="banner-success">&#x2705; Banner saved!</div>
+                    <div class="tk-error"   id="banner-error"></div>
+                </div>
+
+                <!-- Reviews Tab -->
+                <div class="tab-content" id="tab-reviews">
+                    <div class="tk-add-form">
+                        <h4>Add a Review</h4>
+                        <input type="text" id="rev-name" placeholder="Customer Name *" />
+                        <select id="rev-rating">
+                            <option value="5">&#x2605;&#x2605;&#x2605;&#x2605;&#x2605; (5 stars)</option>
+                            <option value="4">&#x2605;&#x2605;&#x2605;&#x2605;&#x2606; (4 stars)</option>
+                            <option value="3">&#x2605;&#x2605;&#x2605;&#x2606;&#x2606; (3 stars)</option>
+                            <option value="2">&#x2605;&#x2605;&#x2606;&#x2606;&#x2606; (2 stars)</option>
+                            <option value="1">&#x2605;&#x2606;&#x2606;&#x2606;&#x2606; (1 star)</option>
+                        </select>
+                        <textarea id="rev-text" placeholder="Review text *"></textarea>
+                        <button class="tk-save-btn" id="rev-add-btn" onclick="addReview()">Add Review</button>
+                        <div class="tk-success" id="rev-add-success">&#x2705; Review added!</div>
+                        <div class="tk-error"   id="rev-add-error"></div>
+                    </div>
+                    <div id="reviews-admin-list"></div>
+                    <div class="empty" id="reviews-admin-empty" style="display:none;">No reviews yet. Add your first one above!</div>
+                </div>
             </div>
         </div>
  
@@ -192,7 +306,7 @@ def admin_page():
  
         function switchTab(name) {
             document.querySelectorAll(".tab").forEach((t, i) => {
-                t.classList.toggle("active", ["leads","faqs","pages","volume"][i] === name);
+                t.classList.toggle("active", ["leads","faqs","pages","volume","banner","reviews"][i] === name);
             });
             document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
             document.getElementById("tab-" + name).classList.add("active");
@@ -240,6 +354,8 @@ def admin_page():
  
                 renderLeads(data.leads);
                 loadAnalytics();
+                loadBanner();
+                loadReviews();
  
             } catch {
                 errorBox.textContent = "Something went wrong. Please try again.";
@@ -261,6 +377,8 @@ def admin_page():
                 const data = await res.json();
                 renderLeads(data.leads);
                 loadAnalytics();
+                loadBanner();
+                loadReviews();
             } catch {
                 alert("Failed to refresh.");
             }
@@ -363,6 +481,163 @@ def admin_page():
             document.getElementById("login-card").style.display = "block";
             document.getElementById("client_id").value = "";
             document.getElementById("pin").value = "";
+        }
+
+        // ── Banner ─────────────────────────────────────────────────────────
+        async function loadBanner() {
+            if (!currentClientId) return;
+            try {
+                const res = await fetch(`/banner/config?client_id=${currentClientId}`);
+                if (!res.ok) return;
+                const d = await res.json();
+                if (!d || !d.message) return;
+                document.getElementById("banner-message").value   = d.message   || "";
+                document.getElementById("banner-cta-text").value  = d.cta_text  || "";
+                document.getElementById("banner-cta-url").value   = d.cta_url   || "";
+                const bg = (d.bg_color   || "1a1a2e").replace("#", "");
+                const tc = (d.text_color || "ffffff").replace("#", "");
+                document.getElementById("banner-bg-hex").value    = bg;
+                document.getElementById("banner-bg-picker").value = "#" + bg;
+                document.getElementById("banner-text-hex").value    = tc;
+                document.getElementById("banner-text-picker").value = "#" + tc;
+                document.getElementById("banner-active").checked  = d.active !== false;
+            } catch {}
+        }
+
+        async function saveBanner() {
+            const btn     = document.getElementById("banner-save-btn");
+            const success = document.getElementById("banner-success");
+            const error   = document.getElementById("banner-error");
+            success.style.display = "none";
+            error.style.display   = "none";
+            const message = document.getElementById("banner-message").value.trim();
+            if (!message) {
+                error.textContent = "Please enter a banner message.";
+                error.style.display = "block";
+                return;
+            }
+            btn.disabled = true; btn.textContent = "Saving...";
+            try {
+                const res = await fetch("/banner/update", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        client_id:  currentClientId,
+                        pin:        currentPin,
+                        message,
+                        cta_text:   document.getElementById("banner-cta-text").value.trim(),
+                        cta_url:    document.getElementById("banner-cta-url").value.trim(),
+                        bg_color:   document.getElementById("banner-bg-hex").value.trim(),
+                        text_color: document.getElementById("banner-text-hex").value.trim(),
+                        active:     document.getElementById("banner-active").checked,
+                    })
+                });
+                if (!res.ok) throw new Error();
+                success.style.display = "block";
+                setTimeout(() => success.style.display = "none", 3000);
+            } catch {
+                error.textContent = "Something went wrong. Please try again.";
+                error.style.display = "block";
+            } finally {
+                btn.disabled = false; btn.textContent = "Save Banner";
+            }
+        }
+
+        // ── Reviews ────────────────────────────────────────────────────────
+        async function loadReviews() {
+            if (!currentClientId || !currentPin) return;
+            try {
+                const res = await fetch(`/reviews/all?client_id=${currentClientId}&pin=${currentPin}`);
+                if (!res.ok) return;
+                renderAdminReviews(await res.json());
+            } catch {}
+        }
+
+        function renderAdminReviews(reviews) {
+            const list  = document.getElementById("reviews-admin-list");
+            const empty = document.getElementById("reviews-admin-empty");
+            list.innerHTML = "";
+            if (!reviews || reviews.length === 0) { empty.style.display = "block"; return; }
+            empty.style.display = "none";
+            reviews.forEach(r => {
+                const filled = Math.round(r.rating || 5);
+                const stars  = "★".repeat(filled) + "☆".repeat(5 - filled);
+                const hidden = !r.approved ? '<span class="tk-rev-hidden-tag">Hidden</span>' : "";
+                const card   = document.createElement("div");
+                card.className = "tk-rev-card-admin";
+                card.innerHTML = `
+                    <div class="tk-rev-info">
+                        <div class="tk-rev-meta">
+                            <span class="tk-rev-admin-name">${r.reviewer_name}</span>
+                            <span class="tk-rev-admin-stars">${stars}</span>
+                            ${hidden}
+                        </div>
+                        <div class="tk-rev-admin-text">${r.text}</div>
+                    </div>
+                    <div class="tk-rev-actions">
+                        <button class="tk-rev-act-btn" onclick="toggleReview('${r.id}',${!r.approved})">${r.approved ? "Hide" : "Show"}</button>
+                        <button class="tk-rev-act-btn danger" onclick="deleteReview('${r.id}')">Delete</button>
+                    </div>`;
+                list.appendChild(card);
+            });
+        }
+
+        async function addReview() {
+            const btn     = document.getElementById("rev-add-btn");
+            const success = document.getElementById("rev-add-success");
+            const error   = document.getElementById("rev-add-error");
+            success.style.display = "none";
+            error.style.display   = "none";
+            const name   = document.getElementById("rev-name").value.trim();
+            const text   = document.getElementById("rev-text").value.trim();
+            const rating = parseInt(document.getElementById("rev-rating").value);
+            if (!name || !text) {
+                error.textContent = "Please fill in the customer name and review text.";
+                error.style.display = "block";
+                return;
+            }
+            btn.disabled = true; btn.textContent = "Adding...";
+            try {
+                const res = await fetch("/reviews/add", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ client_id: currentClientId, pin: currentPin, reviewer_name: name, rating, text })
+                });
+                if (!res.ok) throw new Error();
+                document.getElementById("rev-name").value = "";
+                document.getElementById("rev-text").value = "";
+                success.style.display = "block";
+                setTimeout(() => success.style.display = "none", 3000);
+                loadReviews();
+            } catch {
+                error.textContent = "Something went wrong. Please try again.";
+                error.style.display = "block";
+            } finally {
+                btn.disabled = false; btn.textContent = "Add Review";
+            }
+        }
+
+        async function deleteReview(id) {
+            if (!confirm("Permanently delete this review?")) return;
+            try {
+                await fetch("/reviews/delete", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ client_id: currentClientId, pin: currentPin, review_id: id })
+                });
+                loadReviews();
+            } catch {}
+        }
+
+        async function toggleReview(id, approved) {
+            try {
+                await fetch("/reviews/toggle", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ client_id: currentClientId, pin: currentPin, review_id: id, approved })
+                });
+                loadReviews();
+            } catch {}
         }
     </script>
 </body>
