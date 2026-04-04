@@ -78,7 +78,8 @@ def admin_page():
         .stat-box .number { font-size: 40px; font-weight: 800; color: #818cf8; letter-spacing: -1px; margin-bottom: 8px; line-height: 1; text-shadow: 0 0 10px rgba(129,140,248,0.3); }
         .stat-box .label { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
         
-        .tabs { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border); overflow-x: auto; padding-bottom: 4px; }
+        .tabs { display: flex; gap: 12px; margin-bottom: 24px; border-bottom: 1px solid var(--border); overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; -ms-overflow-style: none; }
+        .tabs::-webkit-scrollbar { display: none; }
         .tab { padding: 12px 20px; cursor: pointer; font-size: 15px; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.2s; border-radius: 8px 8px 0 0; }
         .tab:hover { color: #fff; background: rgba(255,255,255,0.05); }
         .tab.active { color: #818cf8; border-bottom-color: #818cf8; background: rgba(129,140,248,0.05); }
