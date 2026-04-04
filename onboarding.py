@@ -20,7 +20,6 @@ class OnboardingRequest(BaseModel):
     bot_name: str = "Assistant"
     primary_color: str = "007bff"
     header_color: str = ""
-    greeting: str = "Hi there 👋 How can I help you?"
 
 
 def generate_client_id():
@@ -202,11 +201,6 @@ def onboarding_form():
             </div>
             <p class="hint">The colour of the chat window header bar.</p>
         </div>
-        <div class="field">
-            <label>Greeting Message</label>
-            <input type="text" id="greeting" placeholder="e.g. Hi there 👋 How can I help you today?" />
-        </div>
-
         <button type="button" id="submit-btn" onclick="submitForm()">Generate My Chatbot →</button>
         <div class="progress" id="progress-box">⏳ Scanning your website and generating your chatbot — this may take 20–30 seconds...</div>
         <div class="error" id="error-box"></div>
@@ -282,8 +276,7 @@ def onboarding_form():
                 extra_info: document.getElementById("extra_info").value.trim(),
                 bot_name: document.getElementById("bot_name").value.trim() || "Assistant",
                 primary_color: document.getElementById("primary_color").value.trim().replace("#", "") || "007bff",
-                header_color: document.getElementById("header_color").value.trim().replace("#", ""),
-                greeting: document.getElementById("greeting").value.trim() || "Hi there 👋 How can I help you?"
+                header_color: document.getElementById("header_color").value.trim().replace("#", "")
             };
 
             const required = ["business_name", "industry", "services", "hours", "contact", "email"];
@@ -364,6 +357,8 @@ async def register_client(req: OnboardingRequest):
     from dependencies import openai_client, sheets_service
     from config import CLIENT_PROMPTS, MASTER_SHEET_ID
     from crawler import crawl_website
+    import json
+    import urllib.parse
 
     # Crawl website if URL provided
     website_content = ""
@@ -395,15 +390,28 @@ The system prompt should:
 - Include lead capture rules: collect name and email when users ask about pricing, booking, or availability
 - Ask for one detail at a time and not be pushy
 - If the user declines to share details, continue helping normally
+
+Output your response as JSON with exactly two fields:
+1. "system_prompt": The system prompt string.
+2. "greeting": A short, friendly, and highly relevant 1-2 sentence welcoming greeting message.
 """
 
     response = openai_client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt_instructions}],
-        temperature=0.4
+        temperature=0.4,
+        response_format={"type": "json_object"}
     )
 
-    system_prompt = response.choices[0].message.content
+    try:
+        content = json.loads(response.choices[0].message.content)
+        system_prompt = content.get("system_prompt", "You are a helpful assistant.")
+        greeting = content.get("greeting", "Hi there 👋 How can I help you today?")
+    except Exception:
+        system_prompt = response.choices[0].message.content
+        greeting = "Hi there 👋 How can I help you today?"
+        
+    encoded_greeting = urllib.parse.quote(greeting)
     client_id = generate_client_id()
     pin = generate_pin()
 
@@ -433,7 +441,7 @@ The system prompt should:
         f'&bot_name={req.bot_name}'
         f'&primary_color={req.primary_color}'
         f'&header_color={req.header_color}'
-        f'&greeting={req.greeting}")'
+        f'&greeting={encoded_greeting}")'
         f'.then(r => r.text())'
         f'.then(code => eval(code));'
         f'</script>'
@@ -446,7 +454,7 @@ The system prompt should:
         f'&bot_name={req.bot_name}'
         f'&primary_color={req.primary_color}'
         f'&header_color={req.header_color}'
-        f'&greeting={req.greeting}")'
+        f'&greeting={encoded_greeting}")'
         f'.then(r => r.text())'
         f'.then(code => eval(code));'
         f'</script>'
