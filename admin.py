@@ -18,122 +18,102 @@ def admin_page():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lead Dashboard</title>
+    <title>NXTIER Lead Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: sans-serif; background: #f5f5f5; display: flex; justify-content: center; padding: 40px 20px; }
-        .container { width: 100%; max-width: 900px; }
-        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h1 { font-size: 24px; margin-bottom: 8px; }
-        h3 { font-size: 16px; margin-bottom: 16px; color: #333; }
-        p.subtitle { color: #666; margin-bottom: 32px; }
+        :root { --primary: #2563eb; --primary-hover: #1d4ed8; --bg: #f3f4f6; --card: #fff; --text: #111827; --text-muted: #6b7280; --border: #e5e7eb; --radius: 12px; --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); display: flex; justify-content: center; padding: 40px 20px; color: var(--text); }
+        .container { width: 100%; max-width: 960px; }
+        .card { background: var(--card); padding: 40px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 24px; border: 1px solid var(--border); }
+        
+        .logo { font-size: 32px; font-weight: 800; letter-spacing: -1px; color: var(--primary); display: inline-flex; align-items: center; margin-bottom: 8px; justify-content: center; width: 100%; }
+        .logo span { color: var(--text); background: var(--bg); padding: 4px 12px; border-radius: 8px; margin-right: 4px; }
+        
+        h1 { font-size: 24px; margin-bottom: 8px; text-align: center; }
+        p.subtitle { color: var(--text-muted); margin-bottom: 32px; text-align: center; }
         .field { margin-bottom: 20px; }
-        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
-        input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; }
-        input:focus { border-color: #007bff; }
-        button { width: 100%; padding: 14px; background: #007bff; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        button:disabled { background: #aaa; cursor: not-allowed; }
-        .error { margin-top: 16px; padding: 12px; background: #fff0f0; border-radius: 8px; border: 1px solid #ffcccc; color: #c00; display: none; font-size: 14px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; transition: all 0.2s; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.2); }
+        button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: var(--primary-hover); }
+        button:disabled { background: #9ca3af; cursor: not-allowed; }
+        .error { margin-top: 16px; padding: 12px; background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca; color: #b91c1c; display: none; font-size: 14px; }
         #dashboard { display: none; }
-        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .dashboard-header h2 { font-size: 20px; }
-        .logout-btn { background: none; border: 1px solid #ddd; color: #555; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; width: auto; }
-        .logout-btn:hover { background: #f5f5f5; }
-        .refresh-btn { background: none; border: 1px solid #007bff; color: #007bff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; width: auto; }
-        .refresh-btn:hover { background: #f0f7ff; }
- 
-        /* Stats */
-        .stats-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
-        .stat-box { flex: 1; min-width: 120px; background: #f9f9f9; border: 1px solid #eee; border-radius: 10px; padding: 16px; text-align: center; }
-        .stat-box .number { font-size: 32px; font-weight: 700; color: #007bff; }
-        .stat-box .label { font-size: 13px; color: #888; margin-top: 4px; }
- 
-        /* Tabs */
-        .tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 2px solid #eee; }
-        .tab { padding: 10px 20px; cursor: pointer; font-size: 14px; font-weight: 600; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; }
-        .tab.active { color: #007bff; border-bottom-color: #007bff; }
-        .tab-content { display: none; }
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .dashboard-header h2 { font-size: 20px; font-weight: 700; margin: 0; color: var(--text-muted); }
+        .header-logo { font-size: 24px; font-weight: 800; letter-spacing: -1px; color: var(--primary); display: inline-flex; align-items: center; margin: 0; }
+        .header-logo span { color: var(--text); background: var(--bg); padding: 4px 8px; border-radius: 6px; margin-right: 4px; }
+        .header-actions { display: flex; gap: 12px; }
+        .logout-btn, .refresh-btn { background: #fff; border: 1px solid var(--border); color: var(--text-muted); padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; width: auto; font-family: 'Inter', sans-serif; }
+        .logout-btn:hover { background: #f9fafb; color: var(--text); }
+        .refresh-btn { color: var(--primary); border-color: var(--primary); }
+        .refresh-btn:hover { background: #eff6ff; }
+        .stats-row { display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+        .stat-box { flex: 1; min-width: 140px; background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%); border: 1px solid var(--border); border-radius: 12px; padding: 24px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .stat-box .number { font-size: 36px; font-weight: 800; color: var(--primary); letter-spacing: -1px; margin-bottom: 8px; line-height: 1; }
+        .stat-box .label { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid var(--border); overflow-x: auto; padding-bottom: 4px; }
+        .tab { padding: 12px 16px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.2s; }
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-content { display: none; animation: fadeIn 0.3s; }
         .tab-content.active { display: block; }
- 
-        /* Tables */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { text-align: left; padding: 10px 12px; background: #f5f5f5; border-bottom: 2px solid #eee; font-weight: 600; color: #555; }
-        td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
+        th { text-align: left; padding: 16px; background: #f9fafb; border-bottom: 1px solid var(--border); font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        td { padding: 16px; border-bottom: 1px solid var(--border); color: var(--text); }
         tr:last-child td { border-bottom: none; }
-        tr:hover td { background: #fafafa; }
-        .empty { text-align: center; padding: 40px; color: #999; font-size: 14px; }
- 
-        /* FAQ */
-        .faq-item { padding: 14px; background: #f9f9f9; border-radius: 8px; margin-bottom: 10px; font-size: 14px; }
-        .faq-count { font-size: 12px; color: #888; margin-top: 4px; }
-        .loading-text { color: #888; font-size: 14px; padding: 20px 0; }
- 
-        /* Chart */
-        .chart-container { height: 200px; display: flex; align-items: flex-end; gap: 8px; padding: 10px 0; }
-        .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
-        .bar { width: 100%; background: #007bff; border-radius: 4px 4px 0 0; min-height: 2px; transition: height 0.3s ease; }
-        .bar-label { font-size: 10px; color: #888; text-align: center; }
-        .bar-value { font-size: 11px; color: #555; }
- 
-        /* Pages */
-        .page-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+        tr:hover td { background: #f9fafb; }
+        .empty { text-align: center; padding: 48px; color: var(--text-muted); font-size: 15px; }
+        .faq-item { padding: 16px; background: #f9fafb; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; font-size: 15px; }
+        .faq-count { font-size: 13px; font-weight: 600; color: var(--primary); margin-top: 8px; display: inline-block; background: #eff6ff; padding: 4px 8px; border-radius: 6px; }
+        .loading-text { color: var(--text-muted); font-size: 14px; padding: 40px 0; text-align: center; }
+        .chart-container { height: 240px; display: flex; align-items: flex-end; gap: 12px; padding: 24px; border: 1px solid var(--border); border-radius: 12px; margin-top: 16px; background: #fafafa; }
+        .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; justify-content: flex-end; }
+        .bar { width: 100%; background: var(--primary); border-radius: 4px 4px 0 0; min-height: 4px; transition: height 0.5s ease; opacity: 0.9; }
+        .bar:hover { opacity: 1; }
+        .bar-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-align: center; text-transform: uppercase; }
+        .bar-value { font-size: 13px; font-weight: 600; color: var(--text); }
+        .page-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--border); font-size: 14px; background: #fff; }
         .page-item:last-child { border-bottom: none; }
-        .page-url { color: #333; word-break: break-all; flex: 1; margin-right: 12px; }
-        .page-count { background: #007bff; color: white; border-radius: 12px; padding: 2px 10px; font-size: 12px; white-space: nowrap; }
-
-        /* Banner tab */
-        .tk-form-field { margin-bottom: 18px; }
-        .tk-form-field label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; }
-        .tk-form-field input[type="text"], .tk-form-field input[type="url"] {
-            width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px;
-            font-size: 14px; outline: none; font-family: inherit; box-sizing: border-box;
-        }
-        .tk-form-field input:focus { border-color: #007bff; }
-        .tk-color-row { display: flex; gap: 8px; align-items: center; }
-        .tk-color-row input[type="color"] { width: 40px; height: 36px; padding: 2px; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
-        .tk-color-row input[type="text"] { flex: 1; }
-        .tk-toggle-row { display: flex; align-items: center; gap: 10px; }
-        .tk-toggle-row input[type="checkbox"] { width: auto; margin: 0; cursor: pointer; }
-        .tk-toggle-row label { margin: 0; font-size: 14px; cursor: pointer; }
-        .tk-save-btn { padding: 10px 28px; background: #007bff; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; width: auto; transition: background 0.2s; }
-        .tk-save-btn:hover { background: #0056b3; }
-        .tk-save-btn:disabled { background: #aaa; cursor: not-allowed; }
-        .tk-success { color: #2e7d32; font-size: 13px; margin-top: 10px; display: none; }
-        .tk-error   { color: #c00;    font-size: 13px; margin-top: 10px; display: none; }
-        .tk-hint    { font-size: 12px; color: #999; margin-top: 4px; }
-        .tk-section-desc { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.5; }
-
-        /* Reviews tab */
-        .tk-add-form { background: #f8f9fa; border-radius: 10px; padding: 18px; margin-bottom: 24px; border: 1px solid #eee; }
-        .tk-add-form h4 { font-size: 14px; font-weight: 700; margin-bottom: 14px; color: #333; }
-        .tk-add-form input, .tk-add-form textarea, .tk-add-form select {
-            width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px;
-            font-size: 14px; outline: none; margin-bottom: 10px;
-            font-family: inherit; box-sizing: border-box;
-        }
-        .tk-add-form input:focus, .tk-add-form textarea:focus { border-color: #007bff; }
-        .tk-add-form textarea { resize: vertical; min-height: 72px; }
-        .tk-rev-card-admin {
-            display: flex; justify-content: space-between; align-items: flex-start;
-            padding: 12px 14px; border: 1px solid #eee; border-radius: 10px;
-            margin-bottom: 10px; background: #fff; gap: 12px;
-        }
+        .page-url { color: var(--text); font-weight: 500; word-break: break-all; flex: 1; margin-right: 16px; }
+        .page-count { background: #eff6ff; color: var(--primary); border-radius: 12px; padding: 4px 12px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+        .tk-form-field { margin-bottom: 20px; }
+        .tk-form-field label { display: block; font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+        .tk-form-field input[type="text"], .tk-form-field input[type="url"] { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; box-sizing: border-box; transition: all 0.2s; }
+        .tk-form-field input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.2); }
+        .tk-color-row { display: flex; gap: 12px; align-items: center; }
+        .tk-color-row input[type="color"] { width: 48px; height: 48px; padding: 2px; border-radius: 8px; cursor: pointer; flex-shrink: 0; border: 1px solid var(--border); background: #fff; }
+        .tk-color-row input[type="text"] { flex: 1; font-family: monospace; }
+        .tk-toggle-row { display: flex; align-items: center; gap: 12px; }
+        .tk-toggle-row input[type="checkbox"] { width: 18px; height: 18px; margin: 0; cursor: pointer; accent-color: var(--primary); }
+        .tk-toggle-row label { margin: 0; font-size: 15px; cursor: pointer; }
+        .tk-save-btn { padding: 14px 28px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; width: auto; transition: background 0.2s; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
+        .tk-save-btn:hover { background: var(--primary-hover); }
+        .tk-save-btn:disabled { background: var(--text-muted); cursor: not-allowed; box-shadow: none; }
+        .tk-success { color: #059669; font-size: 14px; font-weight: 500; margin-top: 12px; display: none; background: #d1fae5; padding: 12px; border-radius: 8px; }
+        .tk-error { color: #dc2626; font-size: 14px; font-weight: 500; margin-top: 12px; display: none; background: #fef2f2; padding: 12px; border-radius: 8px; }
+        .tk-section-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6; }
+        .tk-add-form { background: #f9fafb; border-radius: 12px; padding: 24px; margin-bottom: 32px; border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .tk-add-form h4 { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+        .tk-add-form input, .tk-add-form textarea, .tk-add-form select { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 16px; box-sizing: border-box; }
+        .tk-add-form input:focus, .tk-add-form textarea:focus, .tk-add-form select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.2); }
+        .tk-add-form textarea { resize: vertical; min-height: 100px; }
+        .tk-rev-card-admin { display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 20px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; background: #fff; gap: 16px; transition: box-shadow 0.2s; }
+        .tk-rev-card-admin:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .tk-rev-info { flex: 1; }
-        .tk-rev-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-        .tk-rev-admin-name  { font-weight: 700; font-size: 13px; color: #111; }
-        .tk-rev-admin-stars { color: #f59e0b; font-size: 13px; }
-        .tk-rev-admin-text  { font-size: 13px; color: #444; line-height: 1.45; }
-        .tk-rev-hidden-tag  { font-size: 11px; color: #e65100; font-weight: 700; background: #fff3e0; padding: 2px 8px; border-radius: 10px; }
-        .tk-rev-actions { display: flex; gap: 6px; flex-shrink: 0; }
-        .tk-rev-act-btn {
-            padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
-            cursor: pointer; border: 1px solid #ddd; background: #fff; color: #555;
-            transition: all 0.15s;
-        }
-        .tk-rev-act-btn:hover  { background: #f5f5f5; }
-        .tk-rev-act-btn.danger { color: #c00; border-color: #fcc; }
-        .tk-rev-act-btn.danger:hover { background: #fff5f5; }
+        .tk-rev-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+        .tk-rev-admin-name { font-weight: 700; font-size: 15px; color: var(--text); }
+        .tk-rev-admin-stars { color: #f59e0b; font-size: 14px; letter-spacing: 2px; }
+        .tk-rev-admin-text { font-size: 14px; color: #4b5563; line-height: 1.5; }
+        .tk-rev-hidden-tag { font-size: 11px; color: #b45309; font-weight: 700; background: #fef3c7; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tk-rev-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .tk-rev-act-btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: #fff; color: var(--text); transition: all 0.2s; }
+        .tk-rev-act-btn:hover { background: #f3f4f6; border-color: #d1d5db; }
+        .tk-rev-act-btn.danger { color: #dc2626; border-color: #fecaca; background: #fff; }
+        .tk-rev-act-btn.danger:hover { background: #fef2f2; border-color: #fca5a5; }
     </style>
 </head>
 <body>
@@ -141,6 +121,7 @@ def admin_page():
  
         <!-- Login -->
         <div class="card" id="login-card">
+            <div class="logo"><span>{NXT}</span>TIER</div>
             <h1>Lead Dashboard</h1>
             <p class="subtitle">Enter your Client ID and PIN to view your leads and analytics.</p>
             <div class="field">
@@ -160,12 +141,13 @@ def admin_page():
         <div id="dashboard">
             <div class="card">
                 <div class="dashboard-header">
-                    <h2 id="business-title">Dashboard</h2>
-                    <div style="display:flex; gap:8px;">
+                    <div class="header-logo"><span>{NXT}</span>TIER</div>
+                    <div class="header-actions">
                         <button class="refresh-btn" onclick="loadDashboard()">↻ Refresh</button>
                         <button class="logout-btn" onclick="logout()">Log out</button>
                     </div>
                 </div>
+                <h2 id="business-title" style="font-size: 20px; font-weight: 700; margin-bottom: 24px; color: var(--text);">Dashboard</h2>
  
                 <!-- Stats -->
                 <div class="stats-row">

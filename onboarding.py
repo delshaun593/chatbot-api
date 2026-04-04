@@ -33,51 +33,75 @@ def generate_pin():
 
 @router.get("/onboarding", response_class=HTMLResponse)
 def onboarding_form():
-    return """
-<!DOCTYPE html>
+    return """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot Onboarding</title>
+    <title>NXTIER Chatbot Onboarding</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: sans-serif; background: #f5f5f5; display: flex; justify-content: center; padding: 40px 20px; }
-        .form-container { background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 600px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
-        h1 { margin-bottom: 8px; font-size: 24px; }
-        p.subtitle { color: #666; margin-bottom: 32px; }
-        .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; color: #999; margin: 28px 0 16px; letter-spacing: 0.5px; }
-        .field { margin-bottom: 20px; }
-        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
-        input, textarea { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; font-family: sans-serif; }
-        input:focus, textarea:focus { border-color: #007bff; }
-        textarea { resize: vertical; min-height: 80px; }
-        .color-row { display: flex; gap: 10px; align-items: center; }
-        .color-row input[type="color"] { width: 48px; height: 40px; padding: 2px; border-radius: 8px; cursor: pointer; flex-shrink: 0; }
-        .color-row input[type="text"] { flex: 1; }
-        button[type="button"] { width: 100%; padding: 14px; background: #007bff; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 8px; }
-        button[type="button"]:hover { background: #0056b3; }
-        button[type="button"]:disabled { background: #aaa; cursor: not-allowed; }
-        .result { margin-top: 32px; padding: 24px; background: #f0f9f0; border-radius: 8px; border: 1px solid #b2dfb2; display: none; }
-        .result h2 { color: #2e7d32; margin-bottom: 16px; }
-        .result p { font-size: 14px; color: #555; margin-bottom: 8px; }
-        .code-box { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 13px; white-space: pre-wrap; word-break: break-all; margin: 12px 0; }
-        .copy-btn { width: auto !important; padding: 8px 16px !important; font-size: 14px !important; margin-top: 0 !important; }
-        .info-row { display: flex; gap: 12px; margin-bottom: 20px; }
-        .info-box { flex: 1; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 14px; }
-        .info-box .info-label { font-size: 12px; color: #888; margin-bottom: 4px; }
-        .info-box .info-value { font-size: 16px; font-weight: 700; color: #111; font-family: monospace; }
-        .warning { font-size: 13px; color: #e65100; margin-top: 12px; }
-        .error { margin-top: 16px; padding: 12px; background: #fff0f0; border-radius: 8px; border: 1px solid #ffcccc; color: #c00; display: none; font-size: 14px; }
-        .hint { font-size: 12px; color: #999; margin-top: 4px; }
-        .progress { display: none; margin-top: 16px; padding: 12px; background: #f0f7ff; border-radius: 8px; border: 1px solid #b3d4ff; color: #0056b3; font-size: 14px; }
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --ring: rgba(37, 99, 235, 0.2);
+            --radius: 12px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-color); display: flex; justify-content: center; padding: 40px 20px; color: var(--text-main); }
+        .form-container { background: var(--card-bg); padding: 48px; border-radius: var(--radius); width: 100%; max-width: 640px; box-shadow: var(--shadow); }
+        .logo-container { text-align: center; margin-bottom: 32px; }
+        .logo { font-size: 36px; font-weight: 800; letter-spacing: -1px; color: var(--primary); display: inline-flex; align-items: center; justify-content: center; }
+        .logo span { color: var(--primary); background: #f3f4f6; padding: 4px 12px; border-radius: 8px; margin-right: 4px; }
+        h1 { margin-bottom: 12px; font-size: 26px; font-weight: 700; letter-spacing: -0.5px; text-align: center; }
+        p.subtitle { color: var(--text-muted); margin-bottom: 40px; text-align: center; font-size: 15px; line-height: 1.5; }
+        .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin: 36px 0 20px; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .field { margin-bottom: 24px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 14px; color: #374151; }
+        .hint { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
+        input[type="text"], input[type="email"], textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; outline: none; transition: all 0.2s; background: #fff; color: var(--text-main); }
+        input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--ring); }
+        textarea { resize: vertical; min-height: 100px; }
+        .color-row { display: flex; gap: 12px; align-items: center; }
+        .color-row input[type="color"] { width: 48px; height: 48px; padding: 2px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; background: #fff; }
+        .color-row input[type="text"] { flex: 1; font-family: ui-monospace, monospace; }
+        button[type="button"] { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 16px; transition: background 0.2s, transform 0.1s; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
+        button[type="button"]:hover { background: var(--primary-hover); }
+        button[type="button"]:active { transform: translateY(1px); }
+        button[type="button"]:disabled { background: #9ca3af; cursor: not-allowed; box-shadow: none; transform: none; }
+        .result { margin-top: 40px; padding: 32px; background: #f0fdf4; border-radius: 12px; border: 1px solid #bbf7d0; display: none; }
+        .result h2 { color: #166534; margin-bottom: 20px; font-size: 20px; }
+        .result p { font-size: 15px; color: #374151; margin-bottom: 12px; line-height: 1.5; }
+        .code-box { background: #1f2937; color: #f3f4f6; padding: 20px; border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 13px; white-space: pre-wrap; word-break: break-all; margin: 16px 0; border: 1px solid #374151; }
+        .copy-btn { width: auto !important; padding: 10px 20px !important; font-size: 14px !important; margin-top: 0 !important; background: #4b5563 !important; }
+        .copy-btn:hover { background: #374151 !important; }
+        .info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+        .info-box { background: #fff; border: 1px solid #d1fae5; border-radius: 8px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .info-box .info-label { font-size: 12px; font-weight: 600; color: #166534; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-box .info-value { font-size: 18px; font-weight: 700; color: #111827; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+        .warning { font-size: 14px; color: #b45309; margin-top: 16px; font-weight: 500; background: #fffbeb; padding: 12px; border-radius: 8px; border: 1px solid #fde68a; }
+        .error { margin-top: 20px; padding: 16px; background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca; color: #b91c1c; display: none; font-size: 14px; font-weight: 500; }
+        .progress { display: none; margin-top: 20px; padding: 16px; background: #eff6ff; border-radius: 8px; border: 1px solid #bfdbfe; color: #1e3a8a; font-size: 14px; font-weight: 500; text-align: center; }
+        details { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-top: 24px; }
+        summary { font-weight: 600; cursor: pointer; color: #374151; font-size: 14px; user-select: none; }
+        a { color: var(--primary); text-decoration: none; font-weight: 500; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
     <div class="form-container">
+        <div class="logo-container">
+            <div class="logo"><span>{NXT}</span>TIER</div>
+        </div>
         <h1>Set Up Your Chatbot</h1>
         <p class="subtitle">Fill in your business details and we'll generate a custom chatbot for your website in seconds.</p>
-
+        
         <div class="section-title">Business Details</div>
 
         <div class="field">
@@ -89,7 +113,7 @@ def onboarding_form():
             <input type="text" id="industry" placeholder="e.g. Plumbing, Fitness, Legal" />
         </div>
         <div class="field">
-            <label>Website URL <span style="font-weight:400;color:#888">(recommended — lets the chatbot learn your full site)</span></label>
+            <label>Website URL <span style="font-weight:400;color:var(--text-muted)">(recommended)</span></label>
             <input type="text" id="website_url" placeholder="e.g. https://yourbusiness.co.nz" />
             <p class="hint">We'll automatically scan your website to make the chatbot smarter.</p>
         </div>
@@ -106,11 +130,11 @@ def onboarding_form():
             <input type="text" id="contact" placeholder="e.g. Phone: 09 123 4567, Email: hello@business.co.nz" />
         </div>
         <div class="field">
-            <label>Your Email Address * <span style="font-weight:400;color:#888">(for receiving leads)</span></label>
+            <label>Your Email Address * <span style="font-weight:400;color:var(--text-muted)">(for receiving leads)</span></label>
             <input type="email" id="email" placeholder="you@yourbusiness.com" />
         </div>
         <div class="field">
-            <label>Anything else the chatbot should know? <span style="font-weight:400;color:#888">(optional)</span></label>
+            <label>Anything else the chatbot should know? <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
             <textarea id="extra_info" placeholder="e.g. We offer a free first consultation. We only service the Auckland region."></textarea>
         </div>
 
@@ -130,7 +154,7 @@ def onboarding_form():
             <p class="hint">Used for the send button and user message bubbles.</p>
         </div>
         <div class="field">
-            <label>Header Colour <span style="font-weight:400;color:#888">(optional — defaults to primary colour)</span></label>
+            <label>Header Colour <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label>
             <div class="color-row">
                 <input type="color" id="header_picker" value="#007bff" oninput="syncHeaderColor(this.value)" />
                 <input type="text" id="header_color" placeholder="Leave blank to match primary" oninput="syncHeaderPicker(this.value)" />
@@ -149,7 +173,7 @@ def onboarding_form():
         <div class="result" id="result-box">
             <h2>✅ Your chatbot is ready!</h2>
 
-            <p style="margin-bottom:16px;">Save these details — you'll need them to access your lead dashboard.</p>
+            <p style="margin-bottom:20px;">Save these details — you'll need them to access your lead dashboard.</p>
             <div class="info-row">
                 <div class="info-box">
                     <div class="info-label">Client ID</div>
@@ -162,19 +186,19 @@ def onboarding_form():
             </div>
             <p class="warning">⚠️ Save your Client ID and PIN now — they won't be shown again.</p>
 
-            <p style="margin-top:20px; margin-bottom:4px;">Paste this code before the <code>&lt;/body&gt;</code> tag on every page of your website:</p>
+            <p style="margin-top:24px; margin-bottom:8px; font-weight: 600;">Paste this code before the <code>&lt;/body&gt;</code> tag on every page of your website:</p>
             <div class="code-box" id="embed-code"></div>
             <button type="button" class="copy-btn" onclick="copyCode()">Copy Code</button>
 
-            <details style="margin-top:20px;">
-                <summary style="cursor:pointer;font-size:13px;color:#666;">Chatbot only (without banner &amp; reviews)</summary>
-                <div class="code-box" id="widget-only-code" style="margin-top:10px;"></div>
+            <details style="margin-top:24px;">
+                <summary>Chatbot only (without banner &amp; reviews)</summary>
+                <div class="code-box" id="widget-only-code" style="margin-top:16px;"></div>
                 <button type="button" class="copy-btn" onclick="copySingleCode()">Copy</button>
             </details>
 
-            <p style="margin-top:16px; font-size:13px; color:#555;">
-                View your leads at:
-                <a id="admin-link" href="#" target="_blank" style="color:#007bff;"></a>
+            <p style="margin-top:24px; font-size:14px; text-align: center;">
+                View your leads at:<br>
+                <a id="admin-link" href="#" target="_blank" style="display:inline-block; margin-top:8px;"></a>
             </p>
         </div>
     </div>
