@@ -1,7 +1,68 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import PlainTextResponse
+from pydantic import BaseModel
+from database import supabase
 
 router = APIRouter()
+
+class WidgetConfigRequest(BaseModel):
+    client_id: str
+    pin: str
+    bot_name: str
+    primary_color: str
+    header_color: str
+    greeting: str
+
+def verify_pin(client_id: str, pin: str) -> bool:
+    from dependencies import sheets_service
+    from config import MASTER_SHEET_ID
+    try:
+        result = sheets_service.spreadsheets().values().get(
+            spreadsheetId=MASTER_SHEET_ID,
+            range="clients!A:F"
+        ).execute()
+        rows = result.get("values", [])
+        return any(
+            len(row) >= 6 and row[0] == client_id and row[5] == pin
+            for row in rows[1:]
+        )
+    except Exception:
+        return False
+
+@router.get("/widget/config")
+async def get_widget_config(client_id: str):
+    """Returns the dynamic widget config for a client."""
+    try:
+        res = supabase.table("widget_config").select("*").eq("client_id", client_id).execute()
+        data = res.data
+        if not data:
+            return {}
+        return data[0]
+    except Exception:
+        return {}
+
+@router.post("/widget/update")
+async def update_widget_config(req: WidgetConfigRequest):
+    """Update a client's widget configuration."""
+    if not verify_pin(req.client_id, req.pin):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    payload = {
+        "client_id": req.client_id,
+        "bot_name": req.bot_name,
+        "primary_color": req.primary_color.lstrip("#"),
+        "header_color": req.header_color.lstrip("#"),
+        "greeting": req.greeting
+    }
+    try:
+        existing = supabase.table("widget_config").select("id").eq("client_id", req.client_id).execute()
+        if existing.data:
+            supabase.table("widget_config").update(payload).eq("client_id", req.client_id).execute()
+        else:
+            supabase.table("widget_config").insert(payload).execute()
+        return {"status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/widget.js")
@@ -12,44 +73,62 @@ def serve_widget(
     bot_name: str = "Assistant",
     greeting: str = "Hi there 👋 How can I help you?"
 ):
-    # Header defaults to primary color if not set
-    resolved_header = header_color if header_color else primary_color
-
-    # Generate avatar initial from bot name
-    avatar_initial = bot_name[0].upper() if bot_name else "A"
-
+    # Generate JS handling fetch
     widget_code = f"""
 (function() {{
   const CLIENT_ID = "{client_id}";
   const BASE_URL = "https://chatbot-api-4ssr.onrender.com";
-  const API_URL = BASE_URL + "/chat";
-  const LEAD_URL = BASE_URL + "/lead";
-  const SESSION_URL = BASE_URL + "/session";
-  const PRIMARY_COLOR = "#{primary_color}";
-  const HEADER_COLOR = "#{resolved_header}";
-  const BOT_NAME = "{bot_name}";
-  const AVATAR_INITIAL = "{avatar_initial}";
-  const GREETING = "{greeting}";
 
-  let leadState = {{ collecting: false, name: null, email: null }};
-  let expanded = false;
-  let messageCount = 0;
-  let conversationHistory = [];
-  let sessionId = "";
+  let _primary_color = "{primary_color}";
+  let _header_color = "{header_color}";
+  let _bot_name = "{bot_name}".replace(/"/g, '\\"');
+  let _greeting = "{greeting}".replace(/"/g, '\\"');
 
-  // Create session on load
-  fetch(SESSION_URL, {{
-    method: "POST",
-    headers: {{ "Content-Type": "application/json" }},
-    body: JSON.stringify({{ client_id: CLIENT_ID, page_url: window.location.href }})
-  }})
-  .then(r => r.json())
-  .then(data => {{ sessionId = data.session_id; }})
-  .catch(() => {{}});
+  fetch(BASE_URL + "/widget/config?client_id=" + CLIENT_ID)
+    .then(r => r.json())
+    .then(cfg => {{
+      if (cfg && cfg.primary_color) {{
+        _primary_color = cfg.primary_color;
+        _header_color = cfg.header_color || cfg.primary_color;
+        _bot_name = cfg.bot_name || _bot_name;
+        _greeting = cfg.greeting || _greeting;
+      }}
+      if (!_header_color) _header_color = _primary_color;
+      initWidget(_primary_color, _header_color, _bot_name, _greeting);
+    }})
+    .catch(() => {{
+      if (!_header_color) _header_color = _primary_color;
+      initWidget(_primary_color, _header_color, _bot_name, _greeting);
+    }});
 
-  // ── Styles ──────────────────────────────────────────────────────────────────
-  const style = document.createElement("style");
-  style.textContent = `
+  function initWidget(PRIMARY_COLOR_HEX, HEADER_COLOR_HEX, BOT_NAME, GREETING) {{
+    const PRIMARY_COLOR = "#" + PRIMARY_COLOR_HEX;
+    const HEADER_COLOR = "#" + HEADER_COLOR_HEX;
+    const AVATAR_INITIAL = BOT_NAME ? BOT_NAME.charAt(0).toUpperCase() : "A";
+    
+    const API_URL = BASE_URL + "/chat";
+    const LEAD_URL = BASE_URL + "/lead";
+    const SESSION_URL = BASE_URL + "/session";
+
+    let leadState = {{ collecting: false, name: null, email: null }};
+    let expanded = false;
+    let messageCount = 0;
+    let conversationHistory = [];
+    let sessionId = "";
+
+    // Create session on load
+    fetch(SESSION_URL, {{
+      method: "POST",
+      headers: {{ "Content-Type": "application/json" }},
+      body: JSON.stringify({{ client_id: CLIENT_ID, page_url: window.location.href }})
+    }})
+    .then(r => r.json())
+    .then(data => {{ sessionId = data.session_id; }})
+    .catch(() => {{}});
+
+    // ── Styles ──────────────────────────────────────────────────────────────────
+    const style = document.createElement("style");
+    style.textContent = `
     @keyframes cwPulse {{
       0% {{ box-shadow: 0 0 0 0 ${{PRIMARY_COLOR}}55; }}
       70% {{ box-shadow: 0 0 0 12px ${{PRIMARY_COLOR}}00; }}
@@ -564,6 +643,7 @@ def serve_widget(
     }}
   }}
 
+  }}
 }})();
 """
     return PlainTextResponse(widget_code, media_type="application/javascript")

@@ -213,6 +213,7 @@ def admin_page():
                     <div class="tab" onclick="switchTab('faqs')">Top Questions</div>
                     <div class="tab" onclick="switchTab('pages')">Top Pages</div>
                     <div class="tab" onclick="switchTab('volume')">Chat Volume</div>
+                    <div class="tab" onclick="switchTab('bot')">🤖 Bot Design</div>
                     <div class="tab" onclick="switchTab('banner')">📣 Banner</div>
                     <div class="tab" onclick="switchTab('reviews')">⭐ Reviews</div>
                 </div>
@@ -255,6 +256,36 @@ def admin_page():
                 <div class="tab-content" id="tab-volume">
                     <h3>Chats per day (last 7 days)</h3>
                     <div class="chart-container" id="volume-chart"></div>
+                </div>
+
+                <!-- Bot Tab -->
+                <div class="tab-content" id="tab-bot">
+                    <p class="tk-section-desc">Customize the appearance and initial greeting message of your chatbot widget.</p>
+                    <div class="tk-form-field">
+                        <label>Bot Name</label>
+                        <input type="text" id="bot-name" placeholder="e.g. Assistant" />
+                    </div>
+                    <div class="tk-form-field">
+                        <label>Greeting Message</label>
+                        <input type="text" id="bot-greeting" placeholder="e.g. Hi there 👋 How can I help you?" />
+                    </div>
+                    <div class="tk-form-field">
+                        <label>Primary Colour</label>
+                        <div class="tk-color-row">
+                            <input type="color" id="bot-primary-picker" value="#007bff" oninput="document.getElementById('bot-primary-hex').value=this.value.replace('#','')" />
+                            <input type="text" id="bot-primary-hex" value="007bff" maxlength="6" oninput="if(/^[0-9A-Fa-f]{6}$/.test(this.value)) document.getElementById('bot-primary-picker').value='#'+this.value" />
+                        </div>
+                    </div>
+                    <div class="tk-form-field">
+                        <label>Header Colour</label>
+                        <div class="tk-color-row">
+                            <input type="color" id="bot-header-picker" value="#007bff" oninput="document.getElementById('bot-header-hex').value=this.value.replace('#','')" />
+                            <input type="text" id="bot-header-hex" value="007bff" maxlength="6" oninput="if(/^[0-9A-Fa-f]{6}$/.test(this.value)) document.getElementById('bot-header-picker').value='#'+this.value" />
+                        </div>
+                    </div>
+                    <button class="tk-save-btn" id="bot-save-btn" onclick="saveBotConfig()">Save Bot Design</button>
+                    <div class="tk-success" id="bot-success">&#x2705; Bot design saved!</div>
+                    <div class="tk-error"   id="bot-error"></div>
                 </div>
 
                 <!-- Banner Tab -->
@@ -326,7 +357,7 @@ def admin_page():
  
         function switchTab(name) {
             document.querySelectorAll(".tab").forEach((t, i) => {
-                t.classList.toggle("active", ["leads","faqs","pages","volume","banner","reviews"][i] === name);
+                t.classList.toggle("active", ["leads","faqs","pages","volume","bot","banner","reviews"][i] === name);
             });
             document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
             document.getElementById("tab-" + name).classList.add("active");
@@ -374,6 +405,7 @@ def admin_page():
  
                 renderLeads(data.leads);
                 loadAnalytics();
+                loadBotConfig();
                 loadBanner();
                 loadReviews();
  
@@ -397,6 +429,7 @@ def admin_page():
                 const data = await res.json();
                 renderLeads(data.leads);
                 loadAnalytics();
+                loadBotConfig();
                 loadBanner();
                 loadReviews();
             } catch {
@@ -501,6 +534,67 @@ def admin_page():
             document.getElementById("login-card").style.display = "block";
             document.getElementById("client_id").value = "";
             document.getElementById("pin").value = "";
+        }
+
+        // ── Bot Config ─────────────────────────────────────────────────────
+        async function loadBotConfig() {
+            if (!currentClientId) return;
+            try {
+                const res = await fetch(`/widget/config?client_id=${currentClientId}`);
+                if (!res.ok) return;
+                const d = await res.json();
+                if (!d || !d.bot_name) return;
+                document.getElementById("bot-name").value = d.bot_name || "";
+                document.getElementById("bot-greeting").value = d.greeting || "";
+                
+                const pColor = (d.primary_color || "007bff").replace("#", "");
+                const hColor = (d.header_color || "007bff").replace("#", "");
+                
+                document.getElementById("bot-primary-hex").value = pColor;
+                document.getElementById("bot-primary-picker").value = "#" + pColor;
+                document.getElementById("bot-header-hex").value = hColor;
+                document.getElementById("bot-header-picker").value = "#" + hColor;
+            } catch {}
+        }
+
+        async function saveBotConfig() {
+            const btn = document.getElementById("bot-save-btn");
+            const success = document.getElementById("bot-success");
+            const error = document.getElementById("bot-error");
+            success.style.display = "none";
+            error.style.display = "none";
+            
+            const bot_name = document.getElementById("bot-name").value.trim();
+            const greeting = document.getElementById("bot-greeting").value.trim();
+            if (!bot_name || !greeting) {
+                error.textContent = "Please fill out bot name and greeting.";
+                error.style.display = "block";
+                return;
+            }
+            
+            btn.disabled = true; btn.textContent = "Saving...";
+            try {
+                const res = await fetch("/widget/update", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        client_id: currentClientId,
+                        pin: currentPin,
+                        bot_name: bot_name,
+                        greeting: greeting,
+                        primary_color: document.getElementById("bot-primary-hex").value.trim(),
+                        header_color: document.getElementById("bot-header-hex").value.trim()
+                    })
+                });
+                if (!res.ok) throw new Error();
+                success.style.display = "block";
+                setTimeout(() => success.style.display = "none", 3000);
+            } catch {
+                error.textContent = "Something went wrong. Please try again.";
+                error.style.display = "block";
+            } finally {
+                btn.disabled = false; btn.textContent = "Save Bot Design";
+            }
         }
 
         // ── Banner ─────────────────────────────────────────────────────────

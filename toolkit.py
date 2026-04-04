@@ -9,10 +9,6 @@ BASE_URL = "https://chatbot-api-4ssr.onrender.com"
 @router.get("/toolkit.js")
 def serve_toolkit(
     client_id: str,
-    bot_name: str = "Assistant",
-    primary_color: str = "007bff",
-    header_color: str = "",
-    greeting: str = "Hi there 👋 How can I help you?",
 ):
     """
     Unified loader that initialises all three toolkit widgets in parallel:
@@ -24,10 +20,6 @@ def serve_toolkit(
     widget_url = (
         f"{BASE_URL}/widget.js"
         f"?client_id={client_id}"
-        f"&bot_name={bot_name}"
-        f"&primary_color={primary_color}"
-        f"&header_color={header_color}"
-        f"&greeting={greeting}"
     )
 
     js = f"""
