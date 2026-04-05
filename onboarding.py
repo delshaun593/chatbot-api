@@ -357,7 +357,7 @@ async def register_client(req: OnboardingRequest):
     from dependencies import openai_client
     from config import CLIENT_PROMPTS
     from crawler import crawl_website
-    from passlib.hash import bcrypt as bcrypt_hash
+    import bcrypt
     from database import supabase
     import json
     import urllib.parse
@@ -416,7 +416,7 @@ Output your response as JSON with exactly two fields:
     encoded_greeting = urllib.parse.quote(greeting)
     client_id = generate_client_id()
     pin = generate_pin()
-    pin_hash = bcrypt_hash.hash(pin)
+    pin_hash = bcrypt.hashpw(pin.encode(), bcrypt.gensalt()).decode()
 
     try:
         supabase.table("clients").insert({

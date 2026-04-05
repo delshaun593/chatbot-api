@@ -7,8 +7,8 @@ Provides verify_pin() with:
   - 5-minute in-memory cache to avoid repeated DB round-trips
 """
 import time
+import bcrypt
 from typing import Optional
-from passlib.hash import bcrypt as bcrypt_hash
 
 from database import supabase
 
@@ -19,7 +19,7 @@ _cache: dict[str, tuple[str, float]] = {}
 _CACHE_TTL = 300  # 5 minutes
 
 
-def _get_cached_hash(client_id: str) -> Optional[str]:
+def _get_cached_hash(client_id: str) -> Optional[bytes]:
     entry = _cache.get(client_id)
     if entry and time.time() < entry[1]:
         return entry[0]
@@ -27,7 +27,7 @@ def _get_cached_hash(client_id: str) -> Optional[str]:
     return None
 
 
-def _set_cached_hash(client_id: str, pin_hash: str) -> None:
+def _set_cached_hash(client_id: str, pin_hash: bytes) -> None:
     _cache[client_id] = (pin_hash, time.time() + _CACHE_TTL)
 
 
@@ -40,7 +40,7 @@ def verify_pin(client_id: str, pin: str) -> bool:
     # 1. Try cache first
     cached = _get_cached_hash(client_id)
     if cached is not None:
-        return bcrypt_hash.verify(pin, cached)
+        return bcrypt.checkpw(pin.encode(), cached)
 
     # 2. Hit Supabase
     try:
@@ -53,9 +53,9 @@ def verify_pin(client_id: str, pin: str) -> bool:
         )
         if not res.data:
             return False
-        pin_hash = res.data["pin_hash"]
-        _set_cached_hash(client_id, pin_hash)
-        return bcrypt_hash.verify(pin, pin_hash)
+        pin_hash_bytes = res.data["pin_hash"].encode()
+        _set_cached_hash(client_id, pin_hash_bytes)
+        return bcrypt.checkpw(pin.encode(), pin_hash_bytes)
     except Exception:
         return False
 
