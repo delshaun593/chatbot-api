@@ -11,3 +11,4 @@ slowapi
 beautifulsoup4
 requests
 supabase
+passlib[bcrypt]

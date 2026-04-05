@@ -354,9 +354,11 @@ def onboarding_form():
 
 @router.post("/register")
 async def register_client(req: OnboardingRequest):
-    from dependencies import openai_client, sheets_service
-    from config import CLIENT_PROMPTS, MASTER_SHEET_ID
+    from dependencies import openai_client
+    from config import CLIENT_PROMPTS
     from crawler import crawl_website
+    from passlib.hash import bcrypt as bcrypt_hash
+    from database import supabase
     import json
     import urllib.parse
 
@@ -414,21 +416,16 @@ Output your response as JSON with exactly two fields:
     encoded_greeting = urllib.parse.quote(greeting)
     client_id = generate_client_id()
     pin = generate_pin()
+    pin_hash = bcrypt_hash.hash(pin)
 
     try:
-        sheets_service.spreadsheets().values().append(
-            spreadsheetId=MASTER_SHEET_ID,
-            range="clients!A:F",
-            valueInputOption="USER_ENTERED",
-            body={"values": [[
-                client_id,
-                req.business_name,
-                req.email,
-                system_prompt,
-                str(datetime.now()),
-                pin
-            ]]}
-        ).execute()
+        supabase.table("clients").insert({
+            "id": client_id,
+            "business_name": req.business_name,
+            "email": req.email,
+            "system_prompt": system_prompt,
+            "pin_hash": pin_hash,
+        }).execute()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save client: {str(e)}")
 

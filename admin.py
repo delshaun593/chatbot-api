@@ -762,74 +762,47 @@ def admin_page():
  
 @router.post("/admin/leads")
 async def get_leads(req: AdminLoginRequest):
-    from dependencies import sheets_service
-    from config import MASTER_SHEET_ID
- 
-    try:
-        result = sheets_service.spreadsheets().values().get(
-            spreadsheetId=MASTER_SHEET_ID,
-            range="clients!A:F"
-        ).execute()
-        rows = result.get("values", [])
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to read clients: {str(e)}")
- 
-    client_row = None
-    for row in rows[1:]:
-        if len(row) >= 6 and row[0] == req.client_id and row[5] == req.pin:
-            client_row = row
-            break
- 
-    if not client_row:
+    from auth import get_client, verify_pin
+    from database import supabase
+
+    # Verify credentials via Supabase + bcrypt
+    client = get_client(req.client_id)
+    if not client or not verify_pin(req.client_id, req.pin):
         raise HTTPException(status_code=401, detail="Invalid client ID or PIN")
- 
-    business_name = client_row[1]
- 
+
+    business_name = client["business_name"]
+
+    # Fetch leads from Supabase
     try:
-        leads_result = sheets_service.spreadsheets().values().get(
-            spreadsheetId=MASTER_SHEET_ID,
-            range="leads!A:D"
-        ).execute()
-        leads_rows = leads_result.get("values", [])
+        leads_res = (
+            supabase.table("leads")
+            .select("name, email, created_at")
+            .eq("client_id", req.client_id)
+            .order("created_at")
+            .execute()
+        )
+        leads = [
+            {"name": row["name"], "email": row["email"], "timestamp": row["created_at"]}
+            for row in (leads_res.data or [])
+        ]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read leads: {str(e)}")
- 
-    leads = []
-    for row in leads_rows[1:]:
-        if len(row) >= 4 and row[0] == req.client_id:
-            leads.append({
-                "name": row[1],
-                "email": row[2],
-                "timestamp": row[3]
-            })
- 
+
     return {"business_name": business_name, "leads": leads}
+
  
  
 @router.get("/admin/analytics")
 async def get_analytics(client_id: str, pin: str):
-    from dependencies import sheets_service
-    from config import MASTER_SHEET_ID
+    from auth import verify_pin
     from dependencies import openai_client
     from database import supabase
     from datetime import datetime, timedelta
- 
-    # Verify PIN
-    try:
-        result = sheets_service.spreadsheets().values().get(
-            spreadsheetId=MASTER_SHEET_ID,
-            range="clients!A:F"
-        ).execute()
-        rows = result.get("values", [])
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Failed to verify client")
- 
-    verified = any(
-        len(row) >= 6 and row[0] == client_id and row[5] == pin
-        for row in rows[1:]
-    )
-    if not verified:
+
+    # Verify PIN via Supabase + bcrypt
+    if not verify_pin(client_id, pin):
         raise HTTPException(status_code=401, detail="Invalid credentials")
+
  
     # Fetch sessions
     try:

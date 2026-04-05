@@ -13,21 +13,7 @@ class WidgetConfigRequest(BaseModel):
     header_color: str
     greeting: str
 
-def verify_pin(client_id: str, pin: str) -> bool:
-    from dependencies import sheets_service
-    from config import MASTER_SHEET_ID
-    try:
-        result = sheets_service.spreadsheets().values().get(
-            spreadsheetId=MASTER_SHEET_ID,
-            range="clients!A:F"
-        ).execute()
-        rows = result.get("values", [])
-        return any(
-            len(row) >= 6 and row[0] == client_id and row[5] == pin
-            for row in rows[1:]
-        )
-    except Exception:
-        return False
+from auth import verify_pin
 
 @router.get("/widget/config")
 async def get_widget_config(client_id: str):
